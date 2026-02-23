@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Controle Uber - Relatório 21→21 (Combustível Diário)</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 16px; max-width: 980px; }
+    .card { border: 1px solid #ddd; border-radius: 12px; padding: 14px; margin: 12px 0; }
+    .row { display:flex; gap: 12px; flex-wrap: wrap; }
+    .row > div { flex: 1; min-width: 240px; }
+    label { display:block; margin-top: 10px; font-weight: 600; }
+    input { width: 100%; padding: 10px; border:1px solid #ccc; border-radius: 10px; margin-top: 6px; }
+    button { padding: 10px 12px; border:0; border-radius: 10px; cursor:pointer; }
+    .kpi { font-size: 18px; font-weight: 800; }
+    .small { color:#666; font-size: 12px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { border-bottom: 1px solid #eee; padding: 8px; text-align:left; }
+    .danger { color:#b00020; font-weight:800; }
+    .ok { color:#0b6b0b; font-weight:800; }
+    .btn { margin-top: 10px; }
+    .btnline { display:flex; gap:10px; flex-wrap:wrap; }
+    hr { border:none;border-top:1px solid #eee;margin:12px 0; }
+    .pill { display:inline-block; padding:4px 10px; border:1px solid #eee; border-radius:999px; font-size:12px; color:#555; }
+  </style>
+</head>
+<body>
+
+<h2>Controle Uber (Fechamento mensal dia 21) — Combustível diário</h2>
+
+<script>
+  const META_PARCELA_CARRO = 2850;
+  const TOTAL_PARCELAS = 48;
+  const META_SEGURO = 363;
+
+  const DEFAULT_PCT_MANUT = 10;
+  const DEFAULT_HORAS_DIA = 5;
+
+  const FECHAMENTO_DIA = 21; // ciclo 21→21
+</script>
+
+<div class="card" id="statusCard"></div>
+
+<div class="card">
+  <h3>Configurações</h3>
+  <div class="row">
+    <div>
+      <label>% manutenção (ex: 10)</label>
+      <input type="number" id="pctManut" min="0" max="50" step="1"/>
+      <div class="small">Reserva automática sobre o bruto (ganho + caixinha).</div>
+    </div>
+    <div>
+      <label>Horas trabalhadas por dia</label>
+      <input type="number" id="horasDia" min="1" max="12" step="0.5"/>
+      <div class="small">Padrão 5h (16h–21h).</div>
+    </div>
+  </div>
+  <button class="btn" id="saveCfgBtn">Salvar configurações</button>
+</div>
+
+<div class="card">
+  <h3>Lançar o dia (corridas)</h3>
+  <label>Data</label>
+  <input type="date" id="data"/>
+
+  <div class="row">
+    <div>
+      <label>Ganho (R$)</label>
+      <input type="number" id="ganho" step="0.01" inputmode="decimal" placeholder="Ex: 190.00"/>
+    </div>
+    <div>
+      <label>Caixinha / extra (R$)</label>
+      <input type="number" id="extra" step="0.01" inputmode="decimal" placeholder="Ex: 10.00"/>
+    </div>
+    <div>
+      <label>Alimentação / gastos (R$)</label>
+      <input type="number" id="gastos" step="0.01" inputmode="decimal" placeholder="Ex: 25.00"/>
+    </div>
+  </div>
+
+  <div class="row">
+    <div>
+      <label>KM rodado</label>
+      <input type="number" id="km" step="0.1" inputmode="decimal" placeholder="Ex: 85"/>
+    </div>
+    <div>
+      <label>Combustível gasto rodando (R$) ✅</label>
+      <input type="number" id="combRodando" step="0.01" inputmode="decimal" placeholder="Ex: 60.00"/>
+      <div class="small">Esse é o valor oficial do combustível no relatório.</div>
+    </div>
+  </div>
+
+  <button class="btn" id="addDiaBtn">Salvar lançamento do dia</button>
+  <div class="small">Se lançar de novo a mesma data, ele substitui (evita duplicar).</div>
+</div>
+
+<div class="card">
+  <h3>Gráfico: saldo da parcela (com líquido do ciclo)</h3>
+  <canvas id="grafico" height="120"></canvas>
+  <div class="small"><span class="pill">Período do relatório: 21→21</span></div>
+</div>
+
+<div class="card">
+  <h3>Pagamentos</h3>
+  <div class="btnline">
+    <button id="pagarCarroBtn">✅ Paguei o carro (abate 1 parcela)</button>
+    <button id="pagarSeguroBtn">✅ Paguei o seguro (mês atual)</button>
+  </div>
+</div>
+
+<div class="card">
+  <div class="btnline" style="justify-content:space-between;">
+    <h3 style="margin:0;">Relatório do ciclo (21→21)</h3>
+    <div class="btnline">
+      <button id="exportBtn">Exportar backup (JSON)</button>
+      <button id="clearBtn" class="danger">Apagar ciclo atual</button>
+    </div>
+  </div>
+  <div id="relatorio" style="margin-top:12px;"></div>
+</div>
+
+<div class="card">
+  <h3>Lançamentos (ciclo 21→21)</h3>
+  <div style="overflow:auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Bruto</th>
+          <th>Alimentação</th>
+          <th>Combustível</th>
+          <th>KM</th>
+          <th>R$/km</th>
+          <th>Custo/km</th>
+          <th>R$/h</th>
+          <th>Manut.</th>
+          <th>Líquido</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tabelaDias"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  const KEY_DIAS = "uber_dias_v2"; 
+  const KEY_CFG  = "uber_cfg_v3";
+  const KEY_PAY  = "uber_pay_v3";
+
+  function brl(n){ return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"}); }
+  function loadJson(key, fallback){
+    const raw=localStorage.getItem(key);
+    try{ return raw? JSON.parse(raw): fallback; }catch{ return fallback; }
+  }
+  function saveJson(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+  function parseDateISO(s){
+    const [y,m,d]=s.split("-").map(Number);
+    return new Date(y, m-1, d);
+  }
+  function getMesKey(d){
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth()+1).padStart(2,"0");
+    return `${yyyy}-${mm}`;
+  }
+  function sortByDate(items){ return items.slice().sort((a,b)=>a.date.localeCompare(b.date)); }
+
+  function getCicloAtual(){
+    const hoje = new Date();
+    const y=hoje.getFullYear(), m=hoje.getMonth();
+    const dia=hoje.getDate();
+    let start, end;
+    if(dia >= FECHAMENTO_DIA){
+      start = new Date(y, m, FECHAMENTO_DIA);
+      end   = new Date(y, m+1, FECHAMENTO_DIA); // exclusivo
+    }else{
+      start = new Date(y, m-1, FECHAMENTO_DIA);
+      end   = new Date(y, m, FECHAMENTO_DIA); // exclusivo
+    }
+    return { start, end };
+  }
+  function isInRange(dateObj, start, end){ return dateObj >= start && dateObj < end; }
+
+  function loadCfg(){
+    const cfg=loadJson(KEY_CFG, {});
+    return {
+      pctManut: (typeof cfg.pctManut==="number") ? cfg.pctManut : DEFAULT_PCT_MANUT,
+      horasDia: (typeof cfg.horasDia==="number") ? cfg.horasDia : DEFAULT_HORAS_DIA,
+    };
+  }
+  function loadPay(){
+    const pay=loadJson(KEY_PAY, {});
+    return {
+      parcelasPagas: (typeof pay.parcelasPagas==="number") ? pay.parcelasPagas : 0,
+      seguroPagoMes: (typeof pay.seguroPagoMes==="object" && pay.seguroPagoMes) ? pay.seguroPagoMes : {}
+    };
+  }
+  function savePay(pay){ saveJson(KEY_PAY, pay); }
+
+  function loadAllDias(){ return loadJson(KEY_DIAS, {}); }
+  function saveAllDias(all){ saveJson(KEY_DIAS, all); }
+
+  function getDiasDoCiclo(ciclo){
+    const all=loadAllDias();
+    const out=[];
+    for(const mesKey in all){
+      for(const it of (all[mesKey]||[])){
+        const d=parseDateISO(it.date);
+        if(isInRange(d, ciclo.start, ciclo.end)) out.push(it);
+      }
+    }
+    return sortByDate(out);
+  }
+
+  function calcDia(it, cfg){
+    const bruto = it.ganho + it.extra;
+    const manut = bruto * (cfg.pctManut/100);
+    const rKm = it.km>0 ? bruto/it.km : 0;
+    const custoKm = it.km>0 ? it.combRodando/it.km : 0;
+    const rHora = cfg.horasDia>0 ? bruto/cfg.horasDia : 0;
+    const liquido = bruto - it.gastos - it.combRodando - manut;
+    return { bruto, manut, rKm, custoKm, rHora, liquido };
+  }
+
+  let chart;
+
+  function render(){
+    const cfg=loadCfg();
+    const pay=loadPay();
+    const ciclo=getCicloAtual();
+
+    document.getElementById("pctManut").value = cfg.pctManut;
+    document.getElementById("horasDia").value = cfg.horasDia;
+
+    // default date = hoje
+    const hoje=new Date();
+    const yyyy=hoje.getFullYear();
+    const mm=String(hoje.getMonth()+1).padStart(2,"0");
+    const dd=String(hoje.getDate()).padStart(2,"0");
+    document.getElementById("data").value = `${yyyy}-${mm}-${dd}`;
+
+    const dias = getDiasDoCiclo(ciclo);
+
+    let bruto=0, aliment=0, km=0, manut=0, combust=0, liquido=0;
+    dias.forEach(it=>{
+      const c=calcDia(it,cfg);
+      bruto += c.bruto;
+      aliment += it.gastos;
+      km += it.km;
+      manut += c.manut;
+      combust += it.combRodando;
+      liquido += c.liquido;
+    });
+
+    const diasQtd=dias.length;
+    const mediaBrutoDia = diasQtd>0 ? bruto/diasQtd : 0;
+    const mediaKmDia = diasQtd>0 ? km/diasQtd : 0;
+
+    const rKmCiclo = km>0 ? bruto/km : 0;
+    const custoKmCiclo = km>0 ? combust/km : 0;
+    const rHoraCiclo = (diasQtd>0 && cfg.horasDia>0) ? (bruto/(diasQtd*cfg.horasDia)) : 0;
+
+    const parcelasRest = Math.max(0, TOTAL_PARCELAS - pay.parcelasPagas);
+    const mesKeyAtual = getMesKey(new Date());
+    const seguroPago = !!pay.seguroPagoMes[mesKeyAtual];
+
+    const saldoParcela = Math.max(0, META_PARCELA_CARRO - liquido);
+    const saldoSeguro = Math.max(0, META_SEGURO - liquido);
+
+    document.getElementById("statusCard").innerHTML = `
+      <div class="row">
+        <div>
+          <div class="small">Ciclo atual</div>
+          <div class="kpi">${ciclo.start.toLocaleDateString("pt-BR")} → ${new Date(ciclo.end-1).toLocaleDateString("pt-BR")}</div>
+          <div class="small">Fechamento todo dia <b>21</b>.</div>
+        </div>
+        <div>
+          <div class="small">Parcelas restantes</div>
+          <div class="kpi">${parcelasRest} / ${TOTAL_PARCELAS}</div>
+          <div class="small">Parcela: <b>${brl(META_PARCELA_CARRO)}</b></div>
+        </div>
+        <div>
+          <div class="small">Seguro (mês atual)</div>
+          <div class="kpi ${seguroPago ? "ok":"danger"}">${seguroPago ? "PAGO":"NÃO PAGO"}</div>
+          <div class="small">Valor: <b>${brl(META_SEGURO)}</b></div>
+        </div>
+      </div>
+      <hr>
+      <div class="row">
+        <div>
+          <div class="small">Líquido do ciclo (conta pra meta)</div>
+          <div class="kpi">${brl(liquido)}</div>
+          <div class="small">Saldo parcela: <b class="${saldoParcela===0?"ok":""}">${brl(saldoParcela)}</b></div>
+          <div class="small">Saldo seguro: <b class="${saldoSeguro===0?"ok":""}">${brl(saldoSeguro)}</b></div>
+        </div>
+        <div>
+          <div class="small">Totais do ciclo</div>
+          <div class="small">Bruto: <b>${brl(bruto)}</b></div>
+          <div class="small">Alimentação: <b>${brl(aliment)}</b></div>
+          <div class="small">Combustível diário: <b>${brl(combust)}</b></div>
+          <div class="small">Manutenção guardada (${cfg.pctManut}%): <b>${brl(manut)}</b></div>
+        </div>
+        <div>
+          <div class="small">Médias do ciclo</div>
+          <div class="small">Bruto/dia: <b>${brl(mediaBrutoDia)}</b></div>
+          <div class="small">KM/dia: <b>${mediaKmDia.toFixed(1)}</b></div>
+          <div class="small">R$/km: <b>${brl(rKmCiclo)}</b></div>
+          <div class="small">Custo/km: <b>${brl(custoKmCiclo)}</b></div>
+          <div class="small">R$/hora: <b>${brl(rHoraCiclo)}</b></div>
+        </div>
+      </div>
+    `;
+
+    document.getElementById("relatorio").innerHTML = `
+      <div class="kpi">${brl(liquido)} <span class="small">(líquido do ciclo)</span></div>
+      <div class="small">
+        Bruto: <b>${brl(bruto)}</b> |
+        Alimentação: <b>${brl(aliment)}</b> |
+        Combustível diário: <b>${brl(combust)}</b> |
+        Manutenção: <b>${brl(manut)}</b> |
+        Dias lançados: <b>${diasQtd}</b> |
+        KM total: <b>${km.toFixed(1)}</b>
+      </div>
+    `;
+
+    renderTabelaDias(dias, cfg);
+    renderGrafico(dias, cfg);
+  }
+
+  function renderTabelaDias(dias, cfg){
+    const tbody=document.getElementById("tabelaDias");
+    tbody.innerHTML="";
+    dias.forEach((it, idx)=>{
+      const c=calcDia(it,cfg);
+      const tr=document.createElement("tr");
+      tr.innerHTML=`
+        <td>${it.date}</td>
+        <td>${brl(c.bruto)}</td>
+        <td>${brl(it.gastos)}</td>
+        <td>${brl(it.combRodando)}</td>
+        <td>${it.km.toFixed(1)}</td>
+        <td>${it.km>0 ? brl(c.rKm) : "-"}</td>
+        <td>${it.km>0 ? brl(c.custoKm) : "-"}</td>
+        <td>${brl(c.rHora)}</td>
+        <td>${brl(c.manut)}</td>
+        <td><b>${brl(c.liquido)}</b></td>
+        <td><button data-i="${idx}">Remover</button></td>
+      `;
+      tr.querySelector("button").onclick=(e)=>{
+        const i=Number(e.target.getAttribute("data-i"));
+        const item=dias[i];
+        removeDia(item.date);
+        render();
+      };
+      tbody.appendChild(tr);
+    });
+  }
+
+  function removeDia(dateISO){
+    const d=parseDateISO(dateISO);
+    const mesKey=getMesKey(d);
+    const all=loadAllDias();
+    all[mesKey]=(all[mesKey]||[]).filter(x=>x.date!==dateISO);
+    saveAllDias(all);
+  }
+
+  function renderGrafico(dias, cfg){
+    let running=0;
+    const labels=[];
+    const saldo=[];
+    dias.forEach(it=>{
+      const c=calcDia(it,cfg);
+      running += c.liquido;
+      labels.push(it.date);
+      saldo.push(Math.max(0, META_PARCELA_CARRO - running));
+    });
+    const ctx=document.getElementById("grafico").getContext("2d");
+    if(chart) chart.destroy();
+    chart=new Chart(ctx,{
+      type:"line",
+      data:{ labels, datasets:[{ label:"Saldo da parcela (R$)", data: saldo, tension:0.25 }] },
+      options:{
+        responsive:true,
+        plugins:{ tooltip:{ callbacks:{ label:(c)=>brl(Number(c.raw||0)) } } },
+        scales:{ y:{ ticks:{ callback:(v)=>brl(Number(v)) } } }
+      }
+    });
+  }
+
+  document.getElementById("saveCfgBtn").onclick=()=>{
+    const pct=Number(document.getElementById("pctManut").value);
+    const horas=Number(document.getElementById("horasDia").value);
+    if(!isFinite(pct) || pct<0 || pct>50){ alert("Coloque % manutenção válido (0 a 50)."); return; }
+    if(!isFinite(horas) || horas<1 || horas>12){ alert("Horas/dia inválidas (1 a 12)."); return; }
+    saveJson(KEY_CFG, { pctManut:pct, horasDia:horas });
+    render();
+  };
+
+  document.getElementById("addDiaBtn").onclick=()=>{
+    const date=document.getElementById("data").value;
+    const ganho=Number(document.getElementById("ganho").value);
+    const extra=Number(document.getElementById("extra").value || 0);
+    const gastos=Number(document.getElementById("gastos").value || 0);
+    const km=Number(document.getElementById("km").value || 0);
+    const combRodando=Number(document.getElementById("combRodando").value || 0);
+
+    if(!date){ alert("Preencha a data."); return; }
+    if(!isFinite(ganho) || ganho<=0){ alert("Ganho precisa ser maior que 0."); return; }
+    if([extra,gastos,km,combRodando].some(v=>!isFinite(v) || v<0)){
+      alert("Extra, alimentação, km e combustível precisam ser 0 ou maior.");
+      return;
+    }
+
+    const d=parseDateISO(date);
+    const mesKey=getMesKey(d);
+    const all=loadAllDias();
+    const arr=all[mesKey] || [];
+    const filtered = arr.filter(x=>x.date!==date);
+    filtered.push({ date, ganho, extra, gastos, km, combRodando });
+    all[mesKey]=filtered;
+    saveAllDias(all);
+
+    document.getElementById("ganho").value="";
+    document.getElementById("extra").value="";
+    document.getElementById("gastos").value="";
+    document.getElementById("km").value="";
+    document.getElementById("combRodando").value="";
+    render();
+  };
+
+  document.getElementById("pagarCarroBtn").onclick=()=>{
+    const pay=loadPay();
+    if(pay.parcelasPagas >= TOTAL_PARCELAS){ alert("Todas as parcelas já estão marcadas."); return; }
+    if(confirm("Confirmar: pagou 1 parcela do carro?")){
+      pay.parcelasPagas += 1;
+      savePay(pay);
+      render();
+    }
+  };
+
+  document.getElementById("pagarSeguroBtn").onclick=()=>{
+    const pay=loadPay();
+    const mesKey=getMesKey(new Date());
+    if(confirm("Confirmar: pagou o seguro do mês atual?")){
+      pay.seguroPagoMes[mesKey]=true;
+      savePay(pay);
+      render();
+    }
+  };
+
+  document.getElementById("clearBtn").onclick=()=>{
+    if(!confirm("Apagar os dados do ciclo atual (21→21)?")) return;
+    const ciclo=getCicloAtual();
+    const all=loadAllDias();
+    for(const mesKey in all){
+      all[mesKey]=(all[mesKey]||[]).filter(it=>!isInRange(parseDateISO(it.date), ciclo.start, ciclo.end));
+    }
+    saveAllDias(all);
+    render();
+  };
+
+  document.getElementById("exportBtn").onclick=()=>{
+    const cfg=loadCfg();
+    const pay=loadPay();
+    const ciclo=getCicloAtual();
+    const dias=getDiasDoCiclo(ciclo);
+    const payload={ ciclo:{start:ciclo.start, end:ciclo.end, fechamentoDia:FECHAMENTO_DIA}, cfg, pay, dias };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");
+    a.href=url;
+    a.download=`backup-ciclo-21-uber-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  render();
+</script>
+
+</body>
+</html>
