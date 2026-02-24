@@ -1,38 +1,190 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>ContUber</title>
 <link rel="icon" href="./favicon_contuber_full.ico">
 <style>
-body{background:#0b0b0c;color:#fff;font-family:Arial;margin:0;padding:20px}
-.card{background:#151518;padding:20px;border-radius:12px;max-width:600px;margin:auto}
-input{width:100%;padding:10px;margin:5px 0;border-radius:8px;border:1px solid #333;background:#111;color:#fff}
-button{padding:10px 14px;margin:5px 5px 0 0;border:none;border-radius:8px;background:#ff7a00;color:#fff;cursor:pointer}
-.hidden{display:none}
-.msg{margin-top:10px;font-size:14px}
+  :root{
+    --bg:#0b0b0c;--card:#151518;--muted:#a8a8b3;--line:#2a2a33;
+    --accent:#ff7a00;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
+  }
+  body{margin:0;background:var(--bg);color:#fff;font-family:Arial,Helvetica,sans-serif}
+  header{padding:18px 20px;font-size:24px;font-weight:700}
+  header small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:4px}
+  .wrap{padding:20px;display:flex;justify-content:center}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:860px;width:100%;padding:18px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .col{flex:1;min-width:240px}
+  label{display:block;margin-top:10px;color:var(--muted);font-size:12px}
+  input,select{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f12;color:#fff}
+  button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:600}
+  button.secondary{background:#23232a;border:1px solid var(--line)}
+  button.danger{background:#7f1d1d}
+  .actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+  .msg{margin-top:10px;color:var(--muted);font-size:13px}
+  .pill{display:inline-flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;border:1px solid var(--line);background:#101014;margin:8px 8px 0 0}
+  .dot{width:10px;height:10px;border-radius:999px;background:var(--muted)}
+  .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+  .hidden{display:none}
+  hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+  .title{font-size:18px;font-weight:700;margin:0 0 6px}
+  .sub{color:var(--muted);font-size:13px;margin:0}
 </style>
 </head>
 <body>
+<header>
+  ContUber
+  <small>Controle mensal por fechamento (dia do carro) + seguro</small>
+</header>
 
-<h1>ContUber</h1>
+<div class="wrap">
 
-<div id="loginBox" class="card">
-<h3>Login</h3>
-<input id="email" type="email" placeholder="Email">
-<input id="senha" type="password" placeholder="Senha (mín 6 caracteres)">
-<button onclick="login()">Entrar</button>
-<button onclick="registrar()">Cadastrar</button>
-<p id="msg" class="msg"></p>
+  <!-- LOGIN -->
+  <div id="loginView" class="card">
+    <h2 class="title">Login</h2>
+    <div class="row">
+      <div class="col">
+        <label>Email</label>
+        <input id="email" type="email" placeholder="seuemail@gmail.com" />
+      </div>
+      <div class="col">
+        <label>Senha (mín 6 caracteres)</label>
+        <input id="senha" type="password" placeholder="******" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnEntrar">Entrar</button>
+      <button id="btnCadastrar" class="secondary">Cadastrar</button>
+      <button id="btnLimpar" class="secondary">Limpar</button>
+    </div>
+
+    <div id="loginMsg" class="msg"></div>
+  </div>
+
+  <!-- APP / PAINEL -->
+  <div id="appView" class="card hidden">
+    <div class="topbar">
+      <div>
+        <div class="title">Painel</div>
+        <div id="userLine" class="sub"></div>
+      </div>
+      <div class="actions" style="margin:0">
+        <button id="btnLogout" class="danger">Sair</button>
+      </div>
+    </div>
+
+    <div id="alerts"></div>
+
+    <!-- SETUP (1º login) -->
+    <div id="setupBox" class="hidden">
+      <hr>
+      <h3 class="title">Configuração inicial (primeiro acesso)</h3>
+      <p class="sub">Esses dados viram a base para o fechamento mensal.</p>
+
+      <div class="row">
+        <div class="col">
+          <label>Valor financiado (carro)</label>
+          <input id="financiado" type="number" step="0.01" placeholder="Ex: 45000" />
+        </div>
+        <div class="col">
+          <label>Dia de vencimento do carro (1 a 28)</label>
+          <input id="diaCarro" type="number" min="1" max="28" placeholder="Ex: 21" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label>Valor do seguro (mensal)</label>
+          <input id="valorSeguro" type="number" step="0.01" placeholder="Ex: 280" />
+        </div>
+        <div class="col">
+          <label>Dia de pagamento do seguro (1 a 28)</label>
+          <input id="diaSeguro" type="number" min="1" max="28" placeholder="Ex: 10" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnSalvarSetup">Salvar configuração</button>
+      </div>
+      <div id="setupMsg" class="msg"></div>
+    </div>
+
+    <!-- RESUMO MÊS -->
+    <hr>
+    <h3 class="title">Fechamento do mês</h3>
+    <p class="sub">O relatório libera somente no dia do vencimento do carro (fechamento).</p>
+
+    <div class="row">
+      <div class="col">
+        <label>Mês (AAAA-MM)</label>
+        <input id="mesRef" type="month" />
+      </div>
+      <div class="col">
+        <label>Valor Bruto (ganhos no período)</label>
+        <input id="bruto" type="number" step="0.01" placeholder="Ex: 6000" />
+      </div>
+      <div class="col">
+        <label>Outros gastos</label>
+        <input id="outros" type="number" step="0.01" placeholder="Ex: 300" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Combustível</label>
+        <input id="combustivel" type="number" step="0.01" placeholder="Ex: 900" />
+      </div>
+      <div class="col">
+        <label>Manutenção</label>
+        <input id="manutencao" type="number" step="0.01" placeholder="Ex: 150" />
+      </div>
+      <div class="col">
+        <label>Seguro pago neste mês?</label>
+        <select id="seguroPago">
+          <option value="nao">Não</option>
+          <option value="sim">Sim</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col">
+        <label>Parcela do carro paga neste mês?</label>
+        <select id="carroPago">
+          <option value="nao">Não</option>
+          <option value="sim">Sim</option>
+        </select>
+      </div>
+      <div class="col">
+        <label>Valor da parcela (se quiser controlar)</label>
+        <input id="parcela" type="number" step="0.01" placeholder="Ex: 1200" />
+      </div>
+      <div class="col">
+        <label>Líquido (auto)</label>
+        <input id="liquido" type="text" disabled />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btnSalvarMes">Salvar mês</button>
+      <button id="btnCarregarMes" class="secondary">Carregar mês</button>
+    </div>
+    <div id="mesMsg" class="msg"></div>
+  </div>
+
 </div>
 
-<!-- Firebase CDN -->
+<!-- Firebase compat CDN -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
+/** 1) COLE AQUI O SEU firebaseConfig (com a apiKey CERTA) **/
 const firebaseConfig = {
   apiKey: "AIzaSyAZCCtQvKNn94cdJdsL-ceZNR87gwoQhKg",
   authDomain: "contuber-1c9ca.firebaseapp.com",
@@ -44,35 +196,292 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
+const db = firebase.firestore();
 
-const msg = document.getElementById("msg");
+/** UI helpers **/
+const $ = (id) => document.getElementById(id);
+const loginView = $("loginView");
+const appView = $("appView");
+const loginMsg = $("loginMsg");
+const setupBox = $("setupBox");
+const setupMsg = $("setupMsg");
+const mesMsg = $("mesMsg");
+const alerts = $("alerts");
 
-function login(){
-  msg.textContent="";
-  auth.signInWithEmailAndPassword(
-    document.getElementById("email").value.trim(),
-    document.getElementById("senha").value
-  ).then(()=>{
-    msg.textContent="Login realizado com sucesso!";
-  }).catch(e=>{
-    msg.textContent="Erro: "+e.code;
-    console.error(e);
-  });
+function money(n){
+  const v = Number(n || 0);
+  return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
 
-function registrar(){
-  msg.textContent="";
-  auth.createUserWithEmailAndPassword(
-    document.getElementById("email").value.trim(),
-    document.getElementById("senha").value
-  ).then(()=>{
-    msg.textContent="Usuário cadastrado com sucesso!";
-  }).catch(e=>{
-    msg.textContent="Erro: "+e.code;
-    console.error(e);
-  });
+function setMsg(el, text, isBad=false){
+  el.textContent = text || "";
+  el.style.color = isBad ? "#ffb4b4" : "#a8a8b3";
 }
+
+function today(){
+  const d = new Date();
+  return { y:d.getFullYear(), m:d.getMonth()+1, day:d.getDate() };
+}
+
+function ymString(y,m){
+  const mm = String(m).padStart(2,"0");
+  return `${y}-${mm}`;
+}
+
+/** AUTH buttons **/
+$("btnEntrar").onclick = async () => {
+  setMsg(loginMsg,"");
+  try{
+    await auth.signInWithEmailAndPassword($("email").value.trim(), $("senha").value);
+    setMsg(loginMsg,"Login realizado!");
+  }catch(e){
+    console.error(e);
+    setMsg(loginMsg, "Erro: " + e.code, true);
+  }
+};
+
+$("btnCadastrar").onclick = async () => {
+  setMsg(loginMsg,"");
+  try{
+    await auth.createUserWithEmailAndPassword($("email").value.trim(), $("senha").value);
+    setMsg(loginMsg,"Usuário cadastrado!");
+  }catch(e){
+    console.error(e);
+    setMsg(loginMsg, "Erro: " + e.code, true);
+  }
+};
+
+$("btnLimpar").onclick = () => {
+  $("email").value = "";
+  $("senha").value = "";
+  setMsg(loginMsg,"");
+};
+
+$("btnLogout").onclick = async () => {
+  await auth.signOut();
+};
+
+/** DATA model **/
+function userDocRef(uid){ return db.collection("users").doc(uid); }
+function mesDocRef(uid, mes){ return db.collection("users").doc(uid).collection("meses").doc(mes); }
+
+/** setup save **/
+$("btnSalvarSetup").onclick = async () => {
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const financiado = Number($("financiado").value || 0);
+  const diaCarro = Number($("diaCarro").value || 0);
+  const valorSeguro = Number($("valorSeguro").value || 0);
+  const diaSeguro = Number($("diaSeguro").value || 0);
+
+  if(!(financiado>0)) return setMsg(setupMsg,"Informe o valor financiado.", true);
+  if(!(diaCarro>=1 && diaCarro<=28)) return setMsg(setupMsg,"Dia do carro deve ser 1 a 28.", true);
+  if(!(valorSeguro>=0)) return setMsg(setupMsg,"Informe o valor do seguro (pode ser 0).", true);
+  if(!(diaSeguro>=1 && diaSeguro<=28)) return setMsg(setupMsg,"Dia do seguro deve ser 1 a 28.", true);
+
+  try{
+    await userDocRef(user.uid).set({
+      setup: true,
+      financiado,
+      diaCarro,
+      valorSeguro,
+      diaSeguro,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, {merge:true});
+    setMsg(setupMsg,"Configuração salva!");
+    setupBox.classList.add("hidden");
+    await refreshAlerts();
+  }catch(e){
+    console.error(e);
+    setMsg(setupMsg,"Erro ao salvar: "+e.code, true);
+  }
+};
+
+/** fechamento rule **/
+async function getProfile(uid){
+  const snap = await userDocRef(uid).get();
+  return snap.exists ? snap.data() : null;
+}
+
+function canShowReport(profile){
+  const t = today();
+  // relatório disponível apenas no dia do carro (fechamento)
+  return profile?.diaCarro === t.day;
+}
+
+async function refreshAlerts(){
+  alerts.innerHTML = "";
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const profile = await getProfile(user.uid);
+  if(!profile?.setup) return;
+
+  const t = today();
+  const isCarDay = t.day === Number(profile.diaCarro);
+  const isSeguroDay = t.day === Number(profile.diaSeguro);
+
+  const addPill = (statusClass, text) => {
+    const div = document.createElement("div");
+    div.className = "pill";
+    div.innerHTML = `<span class="dot ${statusClass}"></span><span>${text}</span>`;
+    alerts.appendChild(div);
+  };
+
+  if(isCarDay) addPill("warn", "Hoje é dia de pagamento do carro (fechamento do mês).");
+  else addPill("ok", `Fechamento do carro: dia ${profile.diaCarro}.`);
+
+  if(isSeguroDay) addPill("warn", "Hoje é dia de pagamento do seguro.");
+  else addPill("ok", `Seguro: dia ${profile.diaSeguro}.`);
+
+  if(canShowReport(profile)) addPill("ok", "Relatório do mês está liberado hoje ✅");
+  else addPill("bad", "Relatório do mês só libera no dia do fechamento do carro.");
+}
+
+/** mês calc + save/load **/
+function calcLiquido(profile){
+  const bruto = Number($("bruto").value||0);
+  const combustivel = Number($("combustivel").value||0);
+  const manutencao = Number($("manutencao").value||0);
+  const outros = Number($("outros").value||0);
+  const parcela = Number($("parcela").value||0);
+
+  const seguroConsiderado = ($("seguroPago").value === "sim") ? Number(profile?.valorSeguro||0) : 0;
+  const parcelaConsiderada = ($("carroPago").value === "sim") ? parcela : 0;
+
+  const totalGastos = combustivel + manutencao + outros + seguroConsiderado + parcelaConsiderada;
+  const liquido = bruto - totalGastos;
+
+  $("liquido").value = money(liquido);
+}
+
+async function ensureMesDefault(){
+  if(!$("mesRef").value){
+    const t = today();
+    $("mesRef").value = ymString(t.y, t.m);
+  }
+}
+
+$("btnSalvarMes").onclick = async () => {
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const profile = await getProfile(user.uid);
+  if(!profile?.setup){
+    setMsg(mesMsg,"Faça a configuração inicial primeiro.", true);
+    setupBox.classList.remove("hidden");
+    return;
+  }
+
+  await ensureMesDefault();
+
+  // regra do fechamento
+  if(!canShowReport(profile)){
+    setMsg(mesMsg, "Relatório só pode ser salvo/fechado no dia do carro (dia "+profile.diaCarro+").", true);
+    return;
+  }
+
+  const mes = $("mesRef").value; // AAAA-MM
+  const data = {
+    mes,
+    bruto: Number($("bruto").value||0),
+    combustivel: Number($("combustivel").value||0),
+    manutencao: Number($("manutencao").value||0),
+    outros: Number($("outros").value||0),
+    parcela: Number($("parcela").value||0),
+    seguroPago: $("seguroPago").value === "sim",
+    carroPago: $("carroPago").value === "sim",
+    valorSeguro: Number(profile.valorSeguro||0),
+    diaCarro: Number(profile.diaCarro||0),
+    diaSeguro: Number(profile.diaSeguro||0),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  try{
+    await mesDocRef(user.uid, mes).set(data, {merge:true});
+    setMsg(mesMsg, "Mês salvo com sucesso ✅");
+  }catch(e){
+    console.error(e);
+    setMsg(mesMsg, "Erro ao salvar: "+e.code, true);
+  }
+};
+
+$("btnCarregarMes").onclick = async () => {
+  const user = auth.currentUser;
+  if(!user) return;
+
+  const profile = await getProfile(user.uid);
+  if(!profile?.setup){
+    setMsg(mesMsg,"Faça a configuração inicial primeiro.", true);
+    setupBox.classList.remove("hidden");
+    return;
+  }
+
+  await ensureMesDefault();
+  const mes = $("mesRef").value;
+
+  try{
+    const snap = await mesDocRef(user.uid, mes).get();
+    if(!snap.exists){
+      setMsg(mesMsg,"Ainda não há dados para este mês.", false);
+      calcLiquido(profile);
+      return;
+    }
+    const d = snap.data();
+    $("bruto").value = d.bruto ?? "";
+    $("combustivel").value = d.combustivel ?? "";
+    $("manutencao").value = d.manutencao ?? "";
+    $("outros").value = d.outros ?? "";
+    $("parcela").value = d.parcela ?? "";
+    $("seguroPago").value = d.seguroPago ? "sim" : "nao";
+    $("carroPago").value = d.carroPago ? "sim" : "nao";
+    setMsg(mesMsg,"Dados carregados ✅");
+    calcLiquido(profile);
+  }catch(e){
+    console.error(e);
+    setMsg(mesMsg,"Erro ao carregar: "+e.code, true);
+  }
+};
+
+// recalc on input
+["mesRef","bruto","combustivel","manutencao","outros","parcela","seguroPago","carroPago"].forEach(id=>{
+  $(id).addEventListener("input", async ()=>{
+    const user = auth.currentUser;
+    if(!user) return;
+    const profile = await getProfile(user.uid);
+    if(profile?.setup) calcLiquido(profile);
+  });
+});
+
+/** auth state: this is what makes it "advance" **/
+auth.onAuthStateChanged(async (user)=>{
+  if(!user){
+    // show login
+    appView.classList.add("hidden");
+    loginView.classList.remove("hidden");
+    setMsg(loginMsg,"");
+    return;
+  }
+
+  // show app
+  loginView.classList.add("hidden");
+  appView.classList.remove("hidden");
+  $("userLine").textContent = "Logado como: " + (user.email || user.uid);
+
+  await ensureMesDefault();
+
+  const profile = await getProfile(user.uid);
+  if(!profile?.setup){
+    setupBox.classList.remove("hidden");
+    setMsg(setupMsg,"Preencha e salve para continuar.");
+  }else{
+    setupBox.classList.add("hidden");
+  }
+
+  await refreshAlerts();
+  if(profile?.setup) calcLiquido(profile);
+});
 </script>
-
 </body>
 </html>
