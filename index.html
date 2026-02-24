@@ -1,789 +1,1258 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
+<!doctype html>
+<html lang="pt-br">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>ContUber</title>
-  <link rel="icon" href="favicon_contuber_full.ico">
+
+  <!-- ✅ Favicon (coloque o arquivo na RAIZ do repositório) -->
+  <link rel="icon" type="image/x-icon" href="favicon_contuber_full.ico" />
+  <meta name="theme-color" content="#0b0b0f" />
 
   <style>
     :root{
-      --bg:#0b0b0c;--card:#151518;--muted:#a8a8b3;--line:#2a2a33;
-      --accent:#ff7a00;--ok:#22c55e;--warn:#f59e0b;--bad:#ef4444;
-      --chip:#101014;
+      --bg:#07070a;
+      --panel:#101116;
+      --panel2:#0d0e12;
+      --stroke:#1e2030;
+      --text:#f3f4f6;
+      --muted:#b4b7c3;
+      --accent:#ff8a00;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --chip:#0b0c10;
+      --shadow: 0 12px 40px rgba(0,0,0,.55);
+      --radius: 18px;
     }
-    body{margin:0;background:var(--bg);color:#fff;font-family:Arial,Helvetica,sans-serif}
-    header{padding:18px 20px;font-size:24px;font-weight:700}
-    header small{display:block;color:var(--muted);font-weight:400;font-size:13px;margin-top:4px}
-    .wrap{padding:20px;display:flex;justify-content:center}
-    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;max-width:1050px;width:100%;padding:18px}
-    .row{display:flex;gap:12px;flex-wrap:wrap}
-    .col{flex:1;min-width:240px}
-    label{display:block;margin-top:10px;color:var(--muted);font-size:12px}
-    input,select{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f12;color:#fff}
-    input[disabled]{opacity:.85}
-    button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700}
-    button.secondary{background:#23232a;border:1px solid var(--line)}
-    button.danger{background:#7f1d1d}
-    .actions{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-    .msg{margin-top:10px;color:var(--muted);font-size:13px}
-    hr{border:none;border-top:1px solid var(--line);margin:16px 0}
-    .title{font-size:18px;font-weight:800;margin:0 0 6px}
-    .sub{color:var(--muted);font-size:13px;margin:0}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-    .hidden{display:none}
-    .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .chip{background:var(--chip);border:1px solid var(--line);border-radius:999px;padding:8px 10px;font-size:13px;display:flex;align-items:center;gap:8px}
-    .dot{width:10px;height:10px;border-radius:50%}
-    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
-    .kpi{background:#0f0f12;border:1px solid var(--line);border-radius:14px;padding:12px}
-    .kpi b{display:block;font-size:18px;margin-top:4px}
-    .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-    @media(max-width:900px){.grid{grid-template-columns:1fr}}
-    .small{font-size:12px;color:var(--muted)}
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 600px at 50% -20%, #1a1a24 0%, transparent 60%),
+                  radial-gradient(900px 500px at 10% 0%, #181018 0%, transparent 65%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      padding:28px;
+    }
+    .wrap{ max-width: 1100px; margin:0 auto; }
+    header{
+      display:flex; align-items:flex-start; justify-content:space-between;
+      gap:16px; margin-bottom:14px;
+    }
+    .brand h1{ margin:0; font-size: 24px; letter-spacing:.2px; }
+    .brand p{ margin:4px 0 0; color:var(--muted); font-size: 13px; }
+    .btn{
+      border:0;
+      padding:10px 14px;
+      border-radius:12px;
+      background: linear-gradient(180deg, #ff9c2a, #ff7a00);
+      color:#111;
+      font-weight: 700;
+      cursor:pointer;
+    }
+    .btn:disabled{ opacity:.5; cursor:not-allowed; }
+    .btn.secondary{
+      background:#141623;
+      color:var(--text);
+      border:1px solid var(--stroke);
+      font-weight:600;
+    }
+    .btn.danger{
+      background: linear-gradient(180deg, #ff4d4d, #b91c1c);
+      color:#fff;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:16px;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+      body{ padding:16px; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding:16px;
+    }
+    .title{
+      font-size: 18px; font-weight:800; margin:0 0 12px;
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .row3{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width: 620px){
+      .row, .row3{ grid-template-columns: 1fr; }
+    }
+    label{ display:block; font-size:12px; color:var(--muted); margin:0 0 6px; }
+    input, select{
+      width:100%;
+      background: #0b0c12;
+      border:1px solid var(--stroke);
+      color: var(--text);
+      padding:10px 12px;
+      border-radius: 12px;
+      outline:none;
+    }
+    input:focus, select:focus{ border-color: rgba(255,138,0,.55); }
+    .inline{
+      display:flex; gap:10px; align-items:center; flex-wrap:wrap;
+    }
+    .hr{ height:1px; background: rgba(255,255,255,.06); margin:14px 0; }
+    .chips{
+      display:flex; flex-wrap:wrap; gap:8px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.22);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius: 14px;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:8px 10px;
+      border-radius: 999px;
+      background: var(--chip);
+      border:1px solid rgba(255,255,255,.08);
+      font-size: 12.5px;
+      color: var(--text);
+      white-space:nowrap;
+    }
+    .dot{ width:10px; height:10px; border-radius:99px; }
+    .dot.ok{ background: var(--good); }
+    .dot.warn{ background: var(--warn); }
+    .dot.bad{ background: var(--bad); }
+    .muted{ color: var(--muted); font-size: 12px; }
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+    .msg.ok{ border-color: rgba(34,197,94,.35); }
+    .msg.warn{ border-color: rgba(245,158,11,.35); }
+    .msg.bad{ border-color: rgba(239,68,68,.35); }
+    .hide{ display:none !important; }
+    .kpi{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+    }
+    .kpi .box{
+      padding:12px;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: rgba(0,0,0,.18);
+    }
+    .kpi .box .v{ font-weight:900; font-size: 18px; margin-top:6px; }
+    .small{ font-size: 12px; color: var(--muted); }
+    table{
+      width:100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    th, td{
+      text-align:left;
+      padding:10px 8px;
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    th{ color: var(--muted); font-weight:700; }
+    .right{ text-align:right; }
+    .pill{
+      display:inline-block;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.10);
+      background: rgba(0,0,0,.18);
+      font-size: 12px;
+    }
+    .pill.ok{ border-color: rgba(34,197,94,.35); }
+    .pill.warn{ border-color: rgba(245,158,11,.35); }
+    .pill.bad{ border-color: rgba(239,68,68,.35); }
+    .footnote{
+      margin-top:10px; font-size:12px; color: var(--muted);
+      line-height:1.35;
+    }
+    .tabs{
+      display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px;
+    }
+    .tab{
+      padding:8px 10px;
+      border-radius: 999px;
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.08);
+      color: var(--text);
+      font-weight:700;
+      font-size: 12px;
+      cursor:pointer;
+    }
+    .tab.active{
+      border-color: rgba(255,138,0,.45);
+      box-shadow: 0 0 0 3px rgba(255,138,0,.12);
+    }
   </style>
 </head>
 
 <body>
-<header>
-  ContUber
-  <small>Ganhos, km, horas, abastecimento, gastos e fechamento mensal no dia do carro + seguro</small>
-</header>
-
 <div class="wrap">
 
-  <!-- LOGIN -->
-  <div id="loginView" class="card">
-    <h2 class="title">Login</h2>
-    <div class="row">
-      <div class="col">
-        <label>Email</label>
-        <input id="email" type="email" placeholder="seuemail@gmail.com"/>
-      </div>
-      <div class="col">
-        <label>Senha (mín 6 caracteres)</label>
-        <input id="senha" type="password" placeholder="******"/>
-      </div>
+  <header>
+    <div class="brand">
+      <h1>ContUber</h1>
+      <p>Controle mensal por fechamento (dia do carro) + seguro • com login e banco (Firestore)</p>
     </div>
+    <button id="btnSair" class="btn danger hide">Sair</button>
+  </header>
 
-    <div class="actions">
-      <button id="btnEntrar">Entrar</button>
-      <button id="btnCadastrar" class="secondary">Cadastrar</button>
-      <button id="btnLimpar" class="secondary">Limpar</button>
-    </div>
-    <div id="loginMsg" class="msg"></div>
-  </div>
+  <div id="topChips" class="chips hide"></div>
 
-  <!-- APP -->
-  <div id="appView" class="card hidden">
-    <div class="topbar">
-      <div>
-        <div class="title">Painel</div>
-        <div id="userLine" class="sub"></div>
+  <div class="grid">
+
+    <!-- ESQUERDA -->
+    <section class="card">
+
+      <!-- LOGIN -->
+      <div id="loginBox">
+        <h2 class="title">Login</h2>
+
+        <div class="row">
+          <div>
+            <label for="email">Email</label>
+            <input id="email" type="email" placeholder="seuemail@email.com" autocomplete="email" />
+          </div>
+          <div>
+            <label for="senha">Senha (mín. 6 caracteres)</label>
+            <input id="senha" type="password" placeholder="******" autocomplete="current-password" />
+          </div>
+        </div>
+
+        <div class="inline" style="margin-top:12px;">
+          <button id="btnEntrar" class="btn">Entrar</button>
+          <button id="btnCadastrar" class="btn secondary">Cadastrar</button>
+          <button id="btnLimparLogin" class="btn secondary">Limpar</button>
+        </div>
+
+        <div id="loginMsg" class="msg hide"></div>
+
+        <div class="footnote">
+          Se aparecer <b>auth/api-key-not-valid</b>, o problema é a <b>API Key/config do Firebase</b> ou restrição por domínio.
+          Você precisa usar o <b>firebaseConfig</b> do seu app Web em <b>Firebase Console → Configurações → Seus aplicativos (Web)</b>.
+          Se restringiu a chave no Google Cloud, inclua seu domínio do GitHub Pages em <b>HTTP referrers</b>.
+        </div>
       </div>
-      <div class="actions" style="margin:0">
-        <button id="btnLogout" class="danger">Sair</button>
+
+      <!-- SETUP INICIAL -->
+      <div id="setupBox" class="hide">
+        <h2 class="title">Configuração inicial (primeiro acesso)</h2>
+
+        <div class="row3">
+          <div>
+            <label for="diaCarro">Dia do fechamento/pagamento do carro</label>
+            <input id="diaCarro" type="number" min="1" max="31" placeholder="Ex.: 21" />
+          </div>
+          <div>
+            <label for="diaSeguro">Dia do pagamento do seguro</label>
+            <input id="diaSeguro" type="number" min="1" max="31" placeholder="Ex.: 15" />
+          </div>
+          <div>
+            <label for="valorSeguro">Valor do seguro (R$)</label>
+            <input id="valorSeguro" type="number" min="0" step="0.01" placeholder="Ex.: 364.00" />
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="row3">
+          <div>
+            <label for="metaDiaria">Meta diária (R$)</label>
+            <input id="metaDiaria" type="number" min="0" step="0.01" placeholder="Ex.: 200.00" />
+          </div>
+          <div>
+            <label for="qtdParcelas">Quantidade de parcelas</label>
+            <input id="qtdParcelas" type="number" min="0" step="1" placeholder="Ex.: 48" />
+          </div>
+          <div>
+            <label for="valorParcela">Valor da parcela (R$)</label>
+            <input id="valorParcela" type="number" min="0" step="0.01" placeholder="Ex.: 980.00" />
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px;">
+          <div>
+            <label for="finSaldoInicial">Saldo financiado inicial (R$)</label>
+            <input id="finSaldoInicial" type="number" min="0" step="0.01" placeholder="Ex.: 150000.00" />
+          </div>
+          <div class="muted" style="align-self:end;">
+            O saldo atual será iniciado igual ao saldo inicial. Conforme marcar parcela paga, ele vai diminuindo.
+          </div>
+        </div>
+
+        <div class="inline" style="margin-top:12px;">
+          <button id="btnSalvarSetup" class="btn">Salvar configuração</button>
+        </div>
+
+        <div id="setupMsg" class="msg hide"></div>
       </div>
-    </div>
 
-    <div id="alerts" class="chips"></div>
+      <!-- APP -->
+      <div id="appBox" class="hide">
+        <div class="inline" style="justify-content:space-between; align-items:flex-start;">
+          <h2 class="title" style="margin:0;">Painel</h2>
+          <div class="muted" id="whoami"></div>
+        </div>
 
-    <!-- CONFIG INICIAL -->
-    <div id="setupBox" class="hidden">
-      <hr>
-      <h3 class="title">Configuração inicial (primeiro acesso)</h3>
-      <p class="sub">Define fechamento mensal, seguro, meta diária e parcelas do financiamento.</p>
+        <div class="tabs">
+          <button class="tab active" data-tab="dia">Lançar dia</button>
+          <button class="tab" data-tab="relatorio">Relatório do ciclo</button>
+          <button class="tab" data-tab="perfil">Perfil</button>
+        </div>
 
+        <!-- TAB DIA -->
+        <div id="tab-dia">
+          <div class="row3">
+            <div>
+              <label for="diaData">Data</label>
+              <input id="diaData" type="date" />
+            </div>
+            <div>
+              <label for="diaGanhos">Ganhos do dia (bruto) R$</label>
+              <input id="diaGanhos" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label for="diaHoras">Horas trabalhadas</label>
+              <input id="diaHoras" type="number" min="0" step="0.1" placeholder="Ex.: 8" />
+            </div>
+          </div>
+
+          <div class="row3" style="margin-top:10px;">
+            <div>
+              <label for="diaKm">Km rodados</label>
+              <input id="diaKm" type="number" min="0" step="0.1" placeholder="Ex.: 180" />
+            </div>
+            <div>
+              <label for="diaLitros">Litros abastecidos</label>
+              <input id="diaLitros" type="number" min="0" step="0.01" placeholder="Ex.: 25.50" />
+            </div>
+            <div>
+              <label for="diaCombustivel">Valor combustível do dia (R$)</label>
+              <input id="diaCombustivel" type="number" min="0" step="0.01" placeholder="Ex.: 150.00" />
+            </div>
+          </div>
+
+          <div class="row3" style="margin-top:10px;">
+            <div>
+              <label for="diaAlimentacao">Gastos alimentação (R$)</label>
+              <input id="diaAlimentacao" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label for="diaReservaManut">Reserva manutenção (R$)</label>
+              <input id="diaReservaManut" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label for="diaOutros">Outros gastos (R$)</label>
+              <input id="diaOutros" type="number" min="0" step="0.01" />
+            </div>
+          </div>
+
+          <div class="inline" style="margin-top:10px;">
+            <label class="inline" style="gap:8px;">
+              <input id="diaParcelaPaga" type="checkbox" />
+              <span class="muted">Parcela do carro paga hoje</span>
+            </label>
+
+            <label class="inline" style="gap:8px;">
+              <input id="diaSeguroPago" type="checkbox" />
+              <span class="muted">Seguro pago hoje</span>
+            </label>
+          </div>
+
+          <div class="hr"></div>
+
+          <div class="kpi">
+            <div class="box">
+              <div class="small">Líquido do dia (estimado)</div>
+              <div class="v" id="kpiLiquidoDia">R$ 0,00</div>
+              <div class="small" id="kpiMetaDia"></div>
+            </div>
+            <div class="box">
+              <div class="small">Custo por km (combustível)</div>
+              <div class="v" id="kpiCustoKm">R$ 0,00</div>
+              <div class="small" id="kpiGanhoHora"></div>
+            </div>
+          </div>
+
+          <div class="inline" style="margin-top:12px;">
+            <button id="btnCarregarDia" class="btn secondary">Carregar dia</button>
+            <button id="btnSalvarDia" class="btn">Salvar dia</button>
+            <button id="btnLimparDia" class="btn secondary">Limpar</button>
+          </div>
+
+          <div id="diaMsg" class="msg hide"></div>
+        </div>
+
+        <!-- TAB RELATORIO -->
+        <div id="tab-relatorio" class="hide">
+          <div class="muted">
+            O relatório do ciclo só fica <b>liberado no dia do fechamento do carro</b> (dia configurado no perfil).
+          </div>
+
+          <div class="inline" style="margin-top:12px;">
+            <button id="btnGerarRelatorio" class="btn">Gerar relatório do ciclo</button>
+            <span class="pill" id="pillRelatorio">—</span>
+          </div>
+
+          <div id="relatorioOut" class="msg hide"></div>
+
+          <div id="relatorioTableWrap" class="card" style="margin-top:12px; background:rgba(0,0,0,.18); box-shadow:none;">
+            <h3 class="title" style="margin:0 0 8px;">Resumo do ciclo</h3>
+            <table>
+              <thead>
+              <tr>
+                <th>Métrica</th>
+                <th class="right">Valor</th>
+              </tr>
+              </thead>
+              <tbody id="relatorioTbody">
+              <tr><td class="muted">—</td><td class="right muted">—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB PERFIL -->
+        <div id="tab-perfil" class="hide">
+          <h3 class="title">Perfil</h3>
+
+          <div class="row3">
+            <div>
+              <label>Fechamento carro</label>
+              <input id="perfilDiaCarro" type="number" min="1" max="31" />
+            </div>
+            <div>
+              <label>Dia do seguro</label>
+              <input id="perfilDiaSeguro" type="number" min="1" max="31" />
+            </div>
+            <div>
+              <label>Valor do seguro (R$)</label>
+              <input id="perfilValorSeguro" type="number" min="0" step="0.01" />
+            </div>
+          </div>
+
+          <div class="row3" style="margin-top:10px;">
+            <div>
+              <label>Meta diária (R$)</label>
+              <input id="perfilMetaDiaria" type="number" min="0" step="0.01" />
+            </div>
+            <div>
+              <label>Parcelas (restantes / total)</label>
+              <input id="perfilParcelas" type="text" disabled />
+            </div>
+            <div>
+              <label>Valor parcela (R$)</label>
+              <input id="perfilValorParcela" type="number" min="0" step="0.01" />
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <div>
+              <label>Saldo financiamento atual (R$)</label>
+              <input id="perfilSaldoAtual" type="number" min="0" step="0.01" />
+            </div>
+            <div class="muted" style="align-self:end;">
+              Você pode ajustar manualmente se precisar. O normal é ir diminuindo quando marcar “parcela paga”.
+            </div>
+          </div>
+
+          <div class="inline" style="margin-top:12px;">
+            <button id="btnSalvarPerfil" class="btn">Salvar perfil</button>
+          </div>
+
+          <div id="perfilMsg" class="msg hide"></div>
+
+          <div class="hr"></div>
+
+          <div class="row">
+            <div>
+              <label>Total bruto acumulado</label>
+              <input id="perfilTotBruto" type="text" disabled />
+            </div>
+            <div>
+              <label>Total líquido acumulado</label>
+              <input id="perfilTotLiquido" type="text" disabled />
+            </div>
+          </div>
+
+          <div class="footnote">
+            Totais são atualizados automaticamente a cada “Salvar dia”. Se você editar um dia antigo e salvar de novo,
+            os totais são ajustados pela diferença (não duplica).
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- DIREITA -->
+    <aside class="card">
+      <h2 class="title">Status rápido</h2>
       <div class="row">
-        <div class="col">
-          <label>Quantidade de parcelas (total)</label>
-          <input id="qtdParcelas" type="number" min="1" step="1" placeholder="Ex: 48"/>
+        <div>
+          <label>Saldo financiamento</label>
+          <input id="finSaldoAtual" type="text" disabled value="—" />
         </div>
-        <div class="col">
-          <label>Valor da parcela (R$)</label>
-          <input id="valorParcela" type="number" step="0.01" placeholder="Ex: 980"/>
-        </div>
-        <div class="col">
-          <label>Dia de fechamento/vencimento do carro (1 a 28)</label>
-          <input id="diaCarro" type="number" min="1" max="28" placeholder="Ex: 21"/>
+        <div>
+          <label>Parcelas restantes</label>
+          <input id="parcelasRestantes" type="text" disabled value="—" />
         </div>
       </div>
 
-      <div class="row">
-        <div class="col">
-          <label>Meta diária (R$ de ganhos)</label>
-          <input id="metaDiaria" type="number" step="0.01" placeholder="Ex: 250"/>
+      <div class="row" style="margin-top:10px;">
+        <div>
+          <label>Parcela (valor)</label>
+          <input id="parcelaAuto" type="text" disabled value="—" />
         </div>
-        <div class="col">
-          <label>Valor do seguro (mensal) (R$)</label>
-          <input id="valorSeguro" type="number" step="0.01" placeholder="Ex: 280"/>
-        </div>
-        <div class="col">
-          <label>Dia de pagamento do seguro (1 a 28)</label>
-          <input id="diaSeguro" type="number" min="1" max="28" placeholder="Ex: 10"/>
+        <div>
+          <label>Status relatório</label>
+          <input id="statusRelatorio" type="text" disabled value="—" />
         </div>
       </div>
 
-      <div class="row">
-        <div class="col">
-          <label>Média do carro (km/L) (opcional)</label>
-          <input id="mediaKML" type="number" step="0.01" placeholder="Ex: 10.5"/>
-          <div class="small">Só informativo (pode deixar em branco).</div>
-        </div>
-        <div class="col">
-          <label>Total do financiamento (auto)</label>
-          <input id="totalFin" type="text" disabled />
-        </div>
-        <div class="col">
-          <label>Saldo inicial (auto)</label>
-          <input id="saldoInicial" type="text" disabled />
-        </div>
+      <div class="hr"></div>
+      <div class="muted">
+        ✅ Topo mostra: <b>Bruto/Líquido do dia</b> + <b>Bruto/Líquido total</b> + alertas (carro/seguro).
       </div>
 
-      <div class="actions">
-        <button id="btnSalvarSetup">Salvar configuração</button>
+      <div class="footnote">
+        Se o favicon der 404, confirme que o arquivo <b>favicon_contuber_full.ico</b> está na raiz do repositório
+        (mesmo nível do <b>index.html</b>) e o nome está igual (maiúsculas/minúsculas contam).
       </div>
-      <div id="setupMsg" class="msg"></div>
-    </div>
+    </aside>
 
-    <!-- DIA -->
-    <hr>
-    <h3 class="title">Lançamento diário</h3>
-    <p class="sub">Registre ganhos, km, horas, abastecimento e gastos do dia.</p>
-
-    <div class="row">
-      <div class="col">
-        <label>Data</label>
-        <input id="diaRef" type="date"/>
-      </div>
-      <div class="col">
-        <label>Ganhos do dia (R$)</label>
-        <input id="ganhos" type="number" step="0.01" placeholder="Ex: 300"/>
-      </div>
-      <div class="col">
-        <label>Horas trabalhadas</label>
-        <input id="horas" type="number" step="0.1" placeholder="Ex: 8"/>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label>Km rodados</label>
-        <input id="km" type="number" step="0.1" placeholder="Ex: 180"/>
-      </div>
-      <div class="col">
-        <label>Abastecimento (R$)</label>
-        <input id="combustivelRS" type="number" step="0.01" placeholder="Ex: 120"/>
-      </div>
-      <div class="col">
-        <label>Litros abastecidos</label>
-        <input id="litros" type="number" step="0.01" placeholder="Ex: 20"/>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label>Alimentação (R$)</label>
-        <input id="alimentacao" type="number" step="0.01" placeholder="Ex: 25"/>
-      </div>
-      <div class="col">
-        <label>Reserva manutenção (R$)</label>
-        <input id="reservaManut" type="number" step="0.01" placeholder="Ex: 15"/>
-      </div>
-      <div class="col">
-        <label>Outros gastos (R$)</label>
-        <input id="outros" type="number" step="0.01" placeholder="Ex: 10"/>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label>Seguro pago hoje?</label>
-        <select id="seguroPagoHoje">
-          <option value="nao">Não</option>
-          <option value="sim">Sim</option>
-        </select>
-      </div>
-      <div class="col">
-        <label>Parcela do carro paga hoje?</label>
-        <select id="carroPagoHoje">
-          <option value="nao">Não</option>
-          <option value="sim">Sim</option>
-        </select>
-        <div class="small">Ao marcar "Sim", desconta 1 parcela e abate o saldo automaticamente.</div>
-      </div>
-      <div class="col">
-        <label>Valor da parcela (auto)</label>
-        <input id="parcelaAuto" type="text" disabled />
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div class="kpi">
-        <div class="small">Ganho por hora</div>
-        <b id="kpiGanhoHora">R$ 0,00</b>
-      </div>
-      <div class="kpi">
-        <div class="small">Gasto combustível / km</div>
-        <b id="kpiCustoKm">R$ 0,00</b>
-      </div>
-      <div class="kpi">
-        <div class="small">Ganho por km</div>
-        <b id="kpiGanhoKm">R$ 0,00</b>
-      </div>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div class="kpi">
-        <div class="small">Total gastos do dia (inclui parcela se paga)</div>
-        <b id="kpiTotalGastosDia">R$ 0,00</b>
-      </div>
-      <div class="kpi">
-        <div class="small">Líquido do dia</div>
-        <b id="kpiLiquidoDia">R$ 0,00</b>
-      </div>
-      <div class="kpi">
-        <div class="small">Meta diária</div>
-        <b id="kpiMetaDia">—</b>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button id="btnSalvarDia">Salvar dia</button>
-      <button id="btnCarregarDia" class="secondary">Carregar dia</button>
-    </div>
-    <div id="diaMsg" class="msg"></div>
-
-    <!-- RELATÓRIO -->
-    <hr>
-    <h3 class="title">Relatório mensal (por fechamento do carro)</h3>
-    <p class="sub">Só libera no dia do fechamento do carro (dia configurado).</p>
-
-    <div class="row">
-      <div class="col">
-        <label>Mês/Período (referência)</label>
-        <input id="mesRef" type="month"/>
-      </div>
-      <div class="col">
-        <label>Parcelas restantes</label>
-        <input id="parcelasRestantes" type="text" disabled/>
-      </div>
-      <div class="col">
-        <label>Saldo financiamento atual</label>
-        <input id="finSaldoAtual" type="text" disabled/>
-      </div>
-    </div>
-
-    <div class="row">
-      <div class="col">
-        <label>Status do relatório</label>
-        <input id="statusRelatorio" type="text" disabled/>
-      </div>
-      <div class="col">
-        <label>Total pago de parcelas no período</label>
-        <input id="mParcelasPagoTxt" type="text" disabled/>
-      </div>
-      <div class="col">
-        <label>Total gasto do período (inclui seguro + parcelas)</label>
-        <input id="mGastosPeriodoTxt" type="text" disabled/>
-      </div>
-    </div>
-
-    <div class="actions">
-      <button id="btnGerarRelatorio">Gerar relatório do período</button>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div class="kpi"><div class="small">Ganhos (total)</div><b id="mGanhos">R$ 0,00</b></div>
-      <div class="kpi"><div class="small">Km (total)</div><b id="mKm">0</b></div>
-      <div class="kpi"><div class="small">Horas (total)</div><b id="mHoras">0</b></div>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div class="kpi"><div class="small">Combustível (total)</div><b id="mComb">R$ 0,00</b></div>
-      <div class="kpi"><div class="small">Alimentação (total)</div><b id="mAlim">R$ 0,00</b></div>
-      <div class="kpi"><div class="small">Reserva manutenção (total)</div><b id="mResMan">R$ 0,00</b></div>
-    </div>
-
-    <div class="grid" style="margin-top:12px">
-      <div class="kpi"><div class="small">Custo por km (combustível)</div><b id="mCustoKm">R$ 0,00</b></div>
-      <div class="kpi"><div class="small">Ganho por hora</div><b id="mGanhoHora">R$ 0,00</b></div>
-      <div class="kpi"><div class="small">Líquido do período</div><b id="mLiquido">R$ 0,00</b></div>
-    </div>
-
-    <div id="relMsg" class="msg"></div>
   </div>
 </div>
 
-<!-- Firebase compat CDN -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-<script>
-  // ========= COLE SEU CONFIG AQUI =========
+<script type="module">
+  /**********************************************************************
+   * 1) COLE AQUI O firebaseConfig DO SEU APP WEB (Firebase Console)
+   *    Firebase → Configurações do projeto → Seus aplicativos → (Web)
+   **********************************************************************/
   const firebaseConfig = {
-    apiKey: "AIzaSyAZCCtQvKNn94cdJdsL-ceZNR87gwoQhKg",
-    authDomain: "contuber-1c9ca.firebaseapp.com",
-    projectId: "contuber-1c9ca",
-    storageBucket: "contuber-1c9ca.firebasestorage.app",
-    messagingSenderId: "333645182595",
-    appId: "1:333645182595:web:147d3ad84116b595324db6"
+    apiKey: "COLE_SUA_APIKEY_AQUI",
+    authDomain: "COLE_SEU_AUTHDOMAIN_AQUI",
+    projectId: "COLE_SEU_PROJECTID_AQUI",
+    storageBucket: "COLE_SEU_STORAGEBUCKET_AQUI",
+    messagingSenderId: "COLE_SEU_SENDERID_AQUI",
+    appId: "COLE_SEU_APPID_AQUI"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+  /**********************************************************************
+   * Firebase (CDN modular v10+)
+   **********************************************************************/
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import {
+    getAuth,
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    increment,
+    collection,
+    getDocs,
+    query,
+    orderBy
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-  // helpers
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  /**********************************************************************
+   * Helpers
+   **********************************************************************/
   const $ = (id)=>document.getElementById(id);
-  const loginView = $("loginView");
-  const appView = $("appView");
-  const alerts = $("alerts");
 
-  function setMsg(el, text, bad=false){
-    el.textContent = text || "";
-    el.style.color = bad ? "#ffb4b4" : "#a8a8b3";
+  function showMsg(el, type, text){
+    el.classList.remove("hide","ok","warn","bad");
+    el.classList.add(type);
+    el.textContent = text;
   }
+  function hideMsg(el){ el.classList.add("hide"); }
+
   function money(n){
-    const v = Number(n || 0);
+    const v = Number(n||0);
     return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   }
+  function num(v){ return Number(String(v ?? "").replace(",", ".")) || 0; }
+
   function today(){
     const d=new Date();
-    const y=d.getFullYear();
-    const m=String(d.getMonth()+1).padStart(2,"0");
-    const day=String(d.getDate()).padStart(2,"0");
-    return `${y}-${m}-${day}`;
+    const yyyy=d.getFullYear();
+    const mm=String(d.getMonth()+1).padStart(2,"0");
+    const dd=String(d.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
   }
-  function monthNow(){
-    const d=new Date();
-    const y=d.getFullYear();
-    const m=String(d.getMonth()+1).padStart(2,"0");
-    return `${y}-${m}`;
+  function parseYMD(s){
+    const [y,m,d]=s.split("-").map(n=>Number(n));
+    return new Date(y, m-1, d);
   }
-  function toMidnightTs(dateStr){
-    const [y,m,d]=dateStr.split("-").map(Number);
-    return new Date(y,m-1,d,0,0,0,0);
+  function formatYMD(dt){
+    const yyyy=dt.getFullYear();
+    const mm=String(dt.getMonth()+1).padStart(2,"0");
+    const dd=String(dt.getDate()).padStart(2,"0");
+    return `${yyyy}-${mm}-${dd}`;
   }
-  function addDays(dateObj, days){
-    const d=new Date(dateObj);
-    d.setDate(d.getDate()+days);
-    return d;
-  }
-  function addChip(kind, text){
-    const dotClass = kind==="ok"?"ok":(kind==="warn"?"warn":"bad");
-    const div=document.createElement("div");
-    div.className="chip";
-    div.innerHTML=`<span class="dot ${dotClass}"></span><span>${text}</span>`;
-    alerts.appendChild(div);
+  function addDays(dt, days){
+    const x=new Date(dt);
+    x.setDate(x.getDate()+days);
+    return x;
   }
 
-  const userRef = (uid)=> db.collection("users").doc(uid);
-  const dayRef  = (uid,date)=> db.collection("users").doc(uid).collection("dias").doc(date);
+  // Chips do topo
+  const topChips = $("topChips");
+  function addChip(kind, text){
+    const chip=document.createElement("div");
+    chip.className="chip";
+    const dot=document.createElement("span");
+    dot.className = "dot " + (kind==="ok" ? "ok" : kind==="warn" ? "warn" : "bad");
+    const span=document.createElement("span");
+    span.textContent=text;
+    chip.append(dot, span);
+    topChips.appendChild(chip);
+  }
+  function clearChips(){ topChips.innerHTML=""; }
+
+  function dayRef(uid, ymd){
+    return doc(db,"users",uid,"days",ymd);
+  }
+  function profileRef(uid){
+    return doc(db,"users",uid,"dados","perfil");
+  }
 
   async function getProfile(uid){
-    const snap = await userRef(uid).get();
-    return snap.exists ? snap.data() : null;
+    const snap = await getDoc(profileRef(uid));
+    return snap.exists() ? snap.data() : null;
   }
 
-  // LOGIN
-  $("btnEntrar").onclick = async ()=>{
-    setMsg($("loginMsg"),"");
-    try{
-      await auth.signInWithEmailAndPassword($("email").value.trim(), $("senha").value);
-      setMsg($("loginMsg"),"Login realizado!");
-    }catch(e){
-      console.error(e);
-      setMsg($("loginMsg"), "Erro: "+e.code, true);
-    }
-  };
-  $("btnCadastrar").onclick = async ()=>{
-    setMsg($("loginMsg"),"");
-    try{
-      await auth.createUserWithEmailAndPassword($("email").value.trim(), $("senha").value);
-      setMsg($("loginMsg"),"Usuário cadastrado!");
-    }catch(e){
-      console.error(e);
-      setMsg($("loginMsg"), "Erro: "+e.code, true);
-    }
-  };
-  $("btnLimpar").onclick = ()=>{
-    $("email").value=""; $("senha").value="";
-    setMsg($("loginMsg"),"");
-  };
-  $("btnLogout").onclick = async ()=> auth.signOut();
-
-  // Setup auto-cálculo total
-  function refreshSetupTotals(){
-    const qtd = Number($("qtdParcelas").value||0);
-    const val = Number($("valorParcela").value||0);
-    const total = (qtd>0 && val>0) ? qtd*val : 0;
-    $("totalFin").value = total ? money(total) : "";
-    $("saldoInicial").value = total ? money(total) : "";
-  }
-  ["qtdParcelas","valorParcela"].forEach(id=>{
-    $(id).addEventListener("input", refreshSetupTotals);
-  });
-
-  // Save setup
-  $("btnSalvarSetup").onclick = async ()=>{
-    const user = auth.currentUser;
-    if(!user) return;
-
-    const qtdParcelas = Number($("qtdParcelas").value||0);
-    const valorParcela = Number($("valorParcela").value||0);
-    const diaCarro = Number($("diaCarro").value||0);
-    const metaDiaria = Number($("metaDiaria").value||0);
-    const valorSeguro = Number($("valorSeguro").value||0);
-    const diaSeguro = Number($("diaSeguro").value||0);
-    const mediaKML = Number($("mediaKML").value||0);
-
-    if(!(qtdParcelas>=1)) return setMsg($("setupMsg"),"Informe a quantidade de parcelas.", true);
-    if(!(valorParcela>0)) return setMsg($("setupMsg"),"Informe o valor da parcela.", true);
-    if(!(diaCarro>=1 && diaCarro<=28)) return setMsg($("setupMsg"),"Dia do carro deve ser 1 a 28.", true);
-    if(!(diaSeguro>=1 && diaSeguro<=28)) return setMsg($("setupMsg"),"Dia do seguro deve ser 1 a 28.", true);
-
-    const totalFinanciamento = qtdParcelas * valorParcela;
-
-    try{
-      await userRef(user.uid).set({
-        setup:true,
-        diaCarro,
-        diaSeguro,
-        valorSeguro,
-        metaDiaria,
-        mediaKML: mediaKML>0 ? mediaKML : null,
-
-        qtdParcelas,
-        valorParcela,
-        totalFinanciamento,
-        parcelasRestantes: qtdParcelas,
-        finSaldoAtual: totalFinanciamento,
-
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }, {merge:true});
-
-      setMsg($("setupMsg"),"Configuração salva ✅");
-      $("setupBox").classList.add("hidden");
-      await refreshTop();
-    }catch(e){
-      console.error(e);
-      setMsg($("setupMsg"),"Erro ao salvar: "+e.code, true);
-    }
-  };
-
-  // Cálculo do dia (inclui parcela se paga)
-  function calcDay(profile){
-    const ganhos = Number($("ganhos").value||0);
-    const km = Number($("km").value||0);
-    const horas = Number($("horas").value||0);
-    const combRS = Number($("combustivelRS").value||0);
-    const aliment = Number($("alimentacao").value||0);
-    const resMan = Number($("reservaManut").value||0);
-    const outros = Number($("outros").value||0);
-
-    const parcelaValor = Number(profile?.valorParcela||0);
-    const parcelaPagaHoje = $("carroPagoHoje").value === "sim";
-    const parcelaNoDia = parcelaPagaHoje ? parcelaValor : 0;
-
-    $("parcelaAuto").value = parcelaValor ? money(parcelaValor) : "—";
-
-    const totalGastos = combRS + aliment + resMan + outros + parcelaNoDia;
-    const liquido = ganhos - totalGastos;
-
-    const ganhoHora = horas>0 ? ganhos/horas : 0;
-    const custoKm = km>0 ? combRS/km : 0;
-    const ganhoKm = km>0 ? ganhos/km : 0;
-
-    $("kpiGanhoHora").textContent = money(ganhoHora);
-    $("kpiCustoKm").textContent = money(custoKm);
-    $("kpiGanhoKm").textContent = money(ganhoKm);
-    $("kpiTotalGastosDia").textContent = money(totalGastos);
-    $("kpiLiquidoDia").textContent = money(liquido);
-
-    const meta = Number(profile?.metaDiaria||0);
-    if(meta>0){
-      const ok = ganhos >= meta;
-      $("kpiMetaDia").textContent = ok ? `BATEU ✅ (${money(ganhos)} / ${money(meta)})` : `FALTOU ❌ (${money(ganhos)} / ${money(meta)})`;
-      $("kpiMetaDia").style.color = ok ? "#b7ffcc" : "#ffb4b4";
-    }else{
-      $("kpiMetaDia").textContent = "Meta não definida";
-      $("kpiMetaDia").style.color = "#a8a8b3";
-    }
-
-    return {ganhos, km, horas, combRS, aliment, resMan, outros, parcelaNoDia, totalGastos, liquido, ganhoHora, custoKm, ganhoKm};
+  function canGenerateReport(p){
+    const day = new Date().getDate();
+    return Number(p?.diaCarro) === day;
   }
 
-  ["ganhos","km","horas","combustivelRS","litros","alimentacao","reservaManut","outros","carroPagoHoje"].forEach(id=>{
-    $(id).addEventListener("input", async ()=>{
-      const u=auth.currentUser; if(!u) return;
-      const p=await getProfile(u.uid);
-      if(p?.setup) calcDay(p);
-    });
-    $(id).addEventListener("change", async ()=>{
-      const u=auth.currentUser; if(!u) return;
-      const p=await getProfile(u.uid);
-      if(p?.setup) calcDay(p);
+  // Ciclo: do dia após o fechamento anterior até o fechamento atual (inclusive).
+  // Ex: diaCarro=21. Em 21/02, ciclo = 22/01 a 21/02.
+  function getCycleRange(diaCarro, refDate = new Date()){
+    const d = new Date(refDate);
+    const y = d.getFullYear();
+    const m = d.getMonth(); // 0-11
+    const closureDay = Number(diaCarro);
+
+    // data de fechamento "deste mês" (no mês atual)
+    const thisClosure = new Date(y, m, Math.min(closureDay, daysInMonth(y,m)));
+
+    // se refDate é antes do fechamento deste mês, o fechamento do ciclo é o fechamento do mês anterior
+    const end = (d < thisClosure) ? new Date(y, m-1, Math.min(closureDay, daysInMonth(y,m-1))) : thisClosure;
+
+    const prevClosure = new Date(end.getFullYear(), end.getMonth()-1, Math.min(closureDay, daysInMonth(end.getFullYear(), end.getMonth()-1)));
+    const start = addDays(prevClosure, 1);
+
+    return { start, end };
+  }
+  function daysInMonth(year, monthIndex){
+    return new Date(year, monthIndex+1, 0).getDate();
+  }
+
+  /**********************************************************************
+   * UI switching
+   **********************************************************************/
+  const loginBox = $("loginBox");
+  const setupBox = $("setupBox");
+  const appBox = $("appBox");
+  const btnSair = $("btnSair");
+
+  function showLogin(){
+    loginBox.classList.remove("hide");
+    setupBox.classList.add("hide");
+    appBox.classList.add("hide");
+    topChips.classList.add("hide");
+    btnSair.classList.add("hide");
+  }
+  function showSetup(){
+    loginBox.classList.add("hide");
+    setupBox.classList.remove("hide");
+    appBox.classList.add("hide");
+    topChips.classList.add("hide");
+    btnSair.classList.remove("hide");
+  }
+  function showApp(){
+    loginBox.classList.add("hide");
+    setupBox.classList.add("hide");
+    appBox.classList.remove("hide");
+    topChips.classList.remove("hide");
+    btnSair.classList.remove("hide");
+  }
+
+  // Tabs
+  document.querySelectorAll(".tab").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      document.querySelectorAll(".tab").forEach(b=>b.classList.remove("active"));
+      btn.classList.add("active");
+      const tab = btn.dataset.tab;
+      $("tab-dia").classList.toggle("hide", tab!=="dia");
+      $("tab-relatorio").classList.toggle("hide", tab!=="relatorio");
+      $("tab-perfil").classList.toggle("hide", tab!=="perfil");
     });
   });
 
-  // Salvar dia
-  $("btnSalvarDia").onclick = async ()=>{
-    const user = auth.currentUser;
-    if(!user) return;
+  /**********************************************************************
+   * Login / Cadastro
+   **********************************************************************/
+  $("btnLimparLogin").addEventListener("click", ()=>{
+    $("email").value="";
+    $("senha").value="";
+    hideMsg($("loginMsg"));
+  });
 
-    const profile = await getProfile(user.uid);
-    if(!profile?.setup){
-      $("setupBox").classList.remove("hidden");
-      return setMsg($("diaMsg"),"Faça a configuração inicial primeiro.", true);
+  $("btnEntrar").addEventListener("click", async ()=>{
+    hideMsg($("loginMsg"));
+    try{
+      await signInWithEmailAndPassword(auth, $("email").value.trim(), $("senha").value);
+      showMsg($("loginMsg"), "ok", "Login realizado com sucesso!");
+    }catch(e){
+      console.error(e);
+      showMsg($("loginMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
+    }
+  });
+
+  $("btnCadastrar").addEventListener("click", async ()=>{
+    hideMsg($("loginMsg"));
+    try{
+      await createUserWithEmailAndPassword(auth, $("email").value.trim(), $("senha").value);
+      showMsg($("loginMsg"), "ok", "Usuário criado com sucesso! Agora você já está logado.");
+    }catch(e){
+      console.error(e);
+      showMsg($("loginMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
+    }
+  });
+
+  btnSair.addEventListener("click", async ()=>{
+    await signOut(auth);
+  });
+
+  /**********************************************************************
+   * Setup inicial / Perfil
+   **********************************************************************/
+  $("btnSalvarSetup").addEventListener("click", async ()=>{
+    hideMsg($("setupMsg"));
+    const u = auth.currentUser;
+    if(!u) return;
+
+    const diaCarro = Math.max(1, Math.min(31, Number($("diaCarro").value||0)));
+    const diaSeguro = Math.max(1, Math.min(31, Number($("diaSeguro").value||0)));
+    const valorSeguro = num($("valorSeguro").value);
+    const metaDiaria = num($("metaDiaria").value);
+    const qtdParcelas = Math.max(0, Number($("qtdParcelas").value||0));
+    const valorParcela = num($("valorParcela").value);
+    const finSaldoInicial = num($("finSaldoInicial").value);
+
+    if(!diaCarro || !diaSeguro){
+      showMsg($("setupMsg"), "warn", "Preencha o dia do carro e do seguro.");
+      return;
     }
 
-    const date = $("diaRef").value || today();
-    $("diaRef").value = date;
-
-    const c = calcDay(profile);
-    const litros = Number($("litros").value||0);
-
-    const seguroPagoHoje = $("seguroPagoHoje").value === "sim";
-    const carroPagoHoje = $("carroPagoHoje").value === "sim";
-
-    const payload = {
-      date,
-      ts: firebase.firestore.Timestamp.fromDate(toMidnightTs(date)),
-      ganhos: c.ganhos,
-      km: c.km,
-      horas: c.horas,
-      combustivelRS: c.combRS,
-      litros: litros,
-      alimentacao: c.aliment,
-      reservaManut: c.resMan,
-      outros: c.outros,
-
-      parcelaPagoHoje: carroPagoHoje,
-      parcelaValor: c.parcelaNoDia, // 0 ou valorParcela
-
-      totalGastos: c.totalGastos,
-      liquido: c.liquido,
-      ganhoHora: c.ganhoHora,
-      custoKm: c.custoKm,
-      ganhoKm: c.ganhoKm,
-
-      seguroPagoHoje: seguroPagoHoje,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    const perfil = {
+      setup:true,
+      diaCarro,
+      diaSeguro,
+      valorSeguro,
+      metaDiaria,
+      qtdParcelas,
+      valorParcela,
+      parcelasRestantes: qtdParcelas,
+      finSaldoInicial,
+      finSaldoAtual: finSaldoInicial,
+      totBruto: 0,
+      totLiquido: 0,
+      updatedAt: Date.now()
     };
 
     try{
-      // salva dia
-      await dayRef(user.uid, date).set(payload, {merge:true});
-
-      // se parcela paga hoje -> desconta 1 e abate saldo
-      if(carroPagoHoje && Number(profile.parcelasRestantes||0) > 0){
-        const novoRest = Math.max(0, Number(profile.parcelasRestantes||0) - 1);
-        const novoSaldo = Math.max(0, Number(profile.finSaldoAtual||0) - Number(profile.valorParcela||0));
-        await userRef(user.uid).set({
-          parcelasRestantes: novoRest,
-          finSaldoAtual: novoSaldo
-        }, {merge:true});
-      }
-
-      setMsg($("diaMsg"),"Dia salvo ✅");
-      await refreshTop();
+      await setDoc(profileRef(u.uid), perfil, { merge:true });
+      showMsg($("setupMsg"), "ok", "Configuração salva! Indo para o painel…");
+      await refreshAll();
+      showApp();
     }catch(e){
       console.error(e);
-      setMsg($("diaMsg"),"Erro ao salvar: "+e.code, true);
+      showMsg($("setupMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
     }
-  };
+  });
 
-  // Carregar dia
-  $("btnCarregarDia").onclick = async ()=>{
-    const user = auth.currentUser;
-    if(!user) return;
-
-    const profile = await getProfile(user.uid);
-    if(!profile?.setup){
-      $("setupBox").classList.remove("hidden");
-      return setMsg($("diaMsg"),"Faça a configuração inicial primeiro.", true);
-    }
-
-    const date = $("diaRef").value || today();
-    $("diaRef").value = date;
+  $("btnSalvarPerfil").addEventListener("click", async ()=>{
+    hideMsg($("perfilMsg"));
+    const u = auth.currentUser;
+    if(!u) return;
 
     try{
-      const snap = await dayRef(user.uid, date).get();
-      if(!snap.exists){
-        setMsg($("diaMsg"),"Ainda não há dados para este dia.", false);
-        calcDay(profile);
+      const patch = {
+        diaCarro: Math.max(1, Math.min(31, Number($("perfilDiaCarro").value||1))),
+        diaSeguro: Math.max(1, Math.min(31, Number($("perfilDiaSeguro").value||1))),
+        valorSeguro: num($("perfilValorSeguro").value),
+        metaDiaria: num($("perfilMetaDiaria").value),
+        valorParcela: num($("perfilValorParcela").value),
+        finSaldoAtual: num($("perfilSaldoAtual").value),
+        updatedAt: Date.now()
+      };
+      await updateDoc(profileRef(u.uid), patch);
+      showMsg($("perfilMsg"), "ok", "Perfil atualizado.");
+      await refreshAll();
+    }catch(e){
+      console.error(e);
+      showMsg($("perfilMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
+    }
+  });
+
+  /**********************************************************************
+   * Lançar dia
+   **********************************************************************/
+  function calcPreviewLiquido(profile){
+    const ganhos = num($("diaGanhos").value);
+    const combustivel = num($("diaCombustivel").value);
+    const alimentacao = num($("diaAlimentacao").value);
+    const reservaManut = num($("diaReservaManut").value);
+    const outros = num($("diaOutros").value);
+
+    const parcela = $("diaParcelaPaga").checked ? num(profile?.valorParcela) : 0;
+    const seguro = $("diaSeguroPago").checked ? num(profile?.valorSeguro) : 0;
+
+    const gastos = combustivel + alimentacao + reservaManut + outros + parcela + seguro;
+    const liquido = ganhos - gastos;
+
+    const km = num($("diaKm").value);
+    const horas = num($("diaHoras").value);
+
+    const custoKm = km > 0 ? combustivel / km : 0;
+    const ganhoHora = horas > 0 ? ganhos / horas : 0;
+
+    $("kpiLiquidoDia").textContent = money(liquido);
+    $("kpiCustoKm").textContent = money(custoKm);
+    $("kpiGanhoHora").textContent = horas>0 ? `Ganho bruto/hora: ${money(ganhoHora)}` : "Ganho bruto/hora: —";
+
+    const meta = num(profile?.metaDiaria);
+    if(meta>0){
+      const ok = ganhos >= meta;
+      $("kpiMetaDia").textContent = ok ? `Meta batida ✅ (${money(ganhos)} / ${money(meta)})` : `Meta: ${money(ganhos)} / ${money(meta)}`;
+    }else{
+      $("kpiMetaDia").textContent = "Meta diária: —";
+    }
+  }
+
+  ["input","change"].forEach(ev=>{
+    ["diaGanhos","diaCombustivel","diaAlimentacao","diaReservaManut","diaOutros","diaParcelaPaga","diaSeguroPago","diaKm","diaHoras"]
+      .forEach(id => $(id).addEventListener(ev, ()=> currentProfile && calcPreviewLiquido(currentProfile)));
+  });
+
+  $("btnLimparDia").addEventListener("click", ()=>{
+    $("diaGanhos").value="";
+    $("diaHoras").value="";
+    $("diaKm").value="";
+    $("diaLitros").value="";
+    $("diaCombustivel").value="";
+    $("diaAlimentacao").value="";
+    $("diaReservaManut").value="";
+    $("diaOutros").value="";
+    $("diaParcelaPaga").checked=false;
+    $("diaSeguroPago").checked=false;
+    hideMsg($("diaMsg"));
+    if(currentProfile) calcPreviewLiquido(currentProfile);
+  });
+
+  $("btnCarregarDia").addEventListener("click", async ()=>{
+    hideMsg($("diaMsg"));
+    const u = auth.currentUser;
+    if(!u) return;
+
+    const ymd = $("diaData").value || today();
+    $("diaData").value = ymd;
+
+    try{
+      const snap = await getDoc(dayRef(u.uid, ymd));
+      if(!snap.exists()){
+        showMsg($("diaMsg"), "warn", "Sem lançamento salvo para esta data.");
         return;
       }
       const d = snap.data();
-      $("ganhos").value = d.ganhos ?? "";
-      $("km").value = d.km ?? "";
-      $("horas").value = d.horas ?? "";
-      $("combustivelRS").value = d.combustivelRS ?? "";
-      $("litros").value = d.litros ?? "";
-      $("alimentacao").value = d.alimentacao ?? "";
-      $("reservaManut").value = d.reservaManut ?? "";
-      $("outros").value = d.outros ?? "";
-      $("seguroPagoHoje").value = d.seguroPagoHoje ? "sim" : "nao";
-      $("carroPagoHoje").value = d.parcelaPagoHoje ? "sim" : "nao";
-      calcDay(profile);
-      setMsg($("diaMsg"),"Dia carregado ✅");
+      $("diaGanhos").value = d.ganhos ?? 0;
+      $("diaHoras").value = d.horas ?? 0;
+      $("diaKm").value = d.km ?? 0;
+      $("diaLitros").value = d.litros ?? 0;
+      $("diaCombustivel").value = d.combustivel ?? 0;
+      $("diaAlimentacao").value = d.alimentacao ?? 0;
+      $("diaReservaManut").value = d.reservaManut ?? 0;
+      $("diaOutros").value = d.outros ?? 0;
+      $("diaParcelaPaga").checked = !!d.parcelaPaga;
+      $("diaSeguroPago").checked = !!d.seguroPago;
+
+      showMsg($("diaMsg"), "ok", "Dia carregado.");
+      if(currentProfile) calcPreviewLiquido(currentProfile);
     }catch(e){
       console.error(e);
-      setMsg($("diaMsg"),"Erro ao carregar: "+e.code, true);
+      showMsg($("diaMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
     }
-  };
+  });
 
-  // Relatório mensal
-  function canGenerateReport(profile){
-    const now = new Date();
-    return now.getDate() === Number(profile.diaCarro||0);
+  async function updateTotalsOnSave(uid, dateStr, newDayData){
+    const profRef = profileRef(uid);
+    const dayDocRef = dayRef(uid, dateStr);
+
+    const oldSnap = await getDoc(dayDocRef);
+    const old = oldSnap.exists() ? oldSnap.data() : {};
+
+    const oldBruto = Number(old.ganhos || 0);
+    const oldLiq   = Number(old.liquido || 0);
+
+    const newBruto = Number(newDayData.ganhos || 0);
+    const newLiq   = Number(newDayData.liquido || 0);
+
+    const diffBruto = newBruto - oldBruto;
+    const diffLiq   = newLiq - oldLiq;
+
+    await updateDoc(profRef, {
+      totBruto: increment(diffBruto),
+      totLiquido: increment(diffLiq),
+    });
+
+    // Ajuste financiamento/parcelas apenas quando marcar "parcela paga"
+    const oldParcela = !!old.parcelaPaga;
+    const newParcela = !!newDayData.parcelaPaga;
+
+    if(!oldParcela && newParcela){
+      const p = await getProfile(uid);
+      const valorParcela = Number(p?.valorParcela || 0);
+      const parcelasRestantes = Number(p?.parcelasRestantes || 0);
+      const finSaldoAtual = Number(p?.finSaldoAtual || 0);
+
+      await updateDoc(profRef, {
+        parcelasRestantes: Math.max(0, parcelasRestantes - 1),
+        finSaldoAtual: Math.max(0, finSaldoAtual - valorParcela),
+      });
+    }
+
+    // Se desmarcar uma parcela que estava marcada (rollback)
+    if(oldParcela && !newParcela){
+      const p = await getProfile(uid);
+      const valorParcela = Number(p?.valorParcela || 0);
+      const parcelasRestantes = Number(p?.parcelasRestantes || 0);
+      const finSaldoAtual = Number(p?.finSaldoAtual || 0);
+
+      await updateDoc(profRef, {
+        parcelasRestantes: Math.max(0, parcelasRestantes + 1),
+        finSaldoAtual: Math.max(0, finSaldoAtual + valorParcela),
+      });
+    }
   }
-  function periodByClosing(monthStr, diaCarro){
-    const [y,m]=monthStr.split("-").map(Number);
-    const endDate = new Date(y,m-1,diaCarro,0,0,0,0);
-    const startDate = addDays(new Date(y,m-2,diaCarro,0,0,0,0), 1);
-    const endExclusive = addDays(endDate,1);
-    return {startDate,endDate,endExclusive};
-  }
 
-  $("btnGerarRelatorio").onclick = async ()=>{
-    const user=auth.currentUser;
-    if(!user) return;
+  $("btnSalvarDia").addEventListener("click", async ()=>{
+    hideMsg($("diaMsg"));
+    const u = auth.currentUser;
+    if(!u) return;
 
-    const profile = await getProfile(user.uid);
-    if(!profile?.setup){
-      $("setupBox").classList.remove("hidden");
-      return setMsg($("relMsg"),"Faça a configuração inicial primeiro.", true);
+    const p = currentProfile;
+    if(!p?.setup){
+      showMsg($("diaMsg"), "warn", "Seu perfil não está configurado.");
+      return;
     }
 
-    if(!canGenerateReport(profile)){
-      $("statusRelatorio").value = `Bloqueado (libera no dia ${profile.diaCarro})`;
-      return setMsg($("relMsg"),`Relatório só libera no dia do fechamento do carro (dia ${profile.diaCarro}).`, true);
-    }
+    const dateStr = $("diaData").value || today();
+    $("diaData").value = dateStr;
 
-    const monthStr = $("mesRef").value || monthNow();
-    $("mesRef").value = monthStr;
+    const ganhos = num($("diaGanhos").value);
+    const horas = num($("diaHoras").value);
+    const km = num($("diaKm").value);
+    const litros = num($("diaLitros").value);
+    const combustivel = num($("diaCombustivel").value);
+    const alimentacao = num($("diaAlimentacao").value);
+    const reservaManut = num($("diaReservaManut").value);
+    const outros = num($("diaOutros").value);
+    const parcelaPaga = $("diaParcelaPaga").checked === true;
+    const seguroPago = $("diaSeguroPago").checked === true;
 
-    const {startDate,endDate,endExclusive} = periodByClosing(monthStr, Number(profile.diaCarro));
+    const parcela = parcelaPaga ? Number(p.valorParcela||0) : 0;
+    const seguro  = seguroPago ? Number(p.valorSeguro||0) : 0;
+
+    const gastosDia = combustivel + alimentacao + reservaManut + outros + parcela + seguro;
+    const liquido = ganhos - gastosDia;
+
+    const data = {
+      data: dateStr,
+      ganhos, horas, km, litros,
+      combustivel, alimentacao, reservaManut, outros,
+      parcelaPaga, seguroPago,
+      gastosDia,
+      liquido,
+      updatedAt: Date.now()
+    };
 
     try{
-      const q = await db.collection("users").doc(user.uid).collection("dias")
-        .where("ts", ">=", firebase.firestore.Timestamp.fromDate(startDate))
-        .where("ts", "<", firebase.firestore.Timestamp.fromDate(endExclusive))
-        .get();
-
-      let ganhos=0, km=0, horas=0, comb=0, alim=0, resMan=0, outros=0, parcelasPago=0;
-      let metasBatidas=0, diasCount=0;
-
-      q.forEach(doc=>{
-        const d = doc.data();
-        ganhos += Number(d.ganhos||0);
-        km += Number(d.km||0);
-        horas += Number(d.horas||0);
-        comb += Number(d.combustivelRS||0);
-        alim += Number(d.alimentacao||0);
-        resMan += Number(d.reservaManut||0);
-        outros += Number(d.outros||0);
-        parcelasPago += Number(d.parcelaValor||0);
-
-        diasCount += 1;
-        const meta = Number(profile.metaDiaria||0);
-        if(meta>0 && Number(d.ganhos||0) >= meta) metasBatidas += 1;
-      });
-
-      const totalGastos = comb + alim + resMan + outros + parcelasPago + Number(profile.valorSeguro||0);
-      const liquido = ganhos - totalGastos;
-
-      const custoKm = km>0 ? comb/km : 0;
-      const ganhoHora = horas>0 ? ganhos/horas : 0;
-
-      $("mGanhos").textContent = money(ganhos);
-      $("mKm").textContent = km.toFixed(1);
-      $("mHoras").textContent = horas.toFixed(1);
-
-      $("mComb").textContent = money(comb);
-      $("mAlim").textContent = money(alim);
-      $("mResMan").textContent = money(resMan);
-
-      $("mCustoKm").textContent = money(custoKm);
-      $("mGanhoHora").textContent = money(ganhoHora);
-      $("mLiquido").textContent = money(liquido);
-
-      $("mParcelasPagoTxt").value = money(parcelasPago);
-      $("mGastosPeriodoTxt").value = money(totalGastos);
-
-      $("statusRelatorio").value =
-        `Liberado ✅ (${startDate.toLocaleDateString("pt-BR")} → ${endDate.toLocaleDateString("pt-BR")})`;
-
-      setMsg($("relMsg"),
-        `Período: ${startDate.toLocaleDateString("pt-BR")} até ${endDate.toLocaleDateString("pt-BR")} | `+
-        `Dias lançados: ${diasCount} | Metas batidas: ${metasBatidas}`);
-
+      await updateTotalsOnSave(u.uid, dateStr, data);
+      await setDoc(dayRef(u.uid, dateStr), data, { merge:true });
+      showMsg($("diaMsg"), "ok", "Dia salvo com sucesso!");
+      await refreshAll();
     }catch(e){
       console.error(e);
-      setMsg($("relMsg"),"Erro ao gerar: "+e.code, true);
+      showMsg($("diaMsg"), "bad", `Erro: ${e?.code || e?.message || e}`);
     }
-  };
+  });
 
-  // Alertas topo
+  /**********************************************************************
+   * Relatório do ciclo
+   **********************************************************************/
+  $("btnGerarRelatorio").addEventListener("click", async ()=>{
+    const u = auth.currentUser;
+    if(!u) return;
+
+    const p = currentProfile;
+    if(!p?.setup) return;
+
+    const allowed = canGenerateReport(p);
+    $("pillRelatorio").className = "pill " + (allowed ? "ok" : "warn");
+    $("pillRelatorio").textContent = allowed ? "Liberado ✅" : `Bloqueado (dia ${p.diaCarro})`;
+
+    if(!allowed){
+      showMsg($("relatorioOut"), "warn", "Relatório só fica disponível no dia do fechamento do carro.");
+      return;
+    }
+
+    hideMsg($("relatorioOut"));
+
+    try{
+      const {start, end} = getCycleRange(p.diaCarro, new Date());
+      const startStr = formatYMD(start);
+      const endStr = formatYMD(end);
+
+      // Buscar TODOS os dias e filtrar pelo range (ok para MVP)
+      const q = query(collection(db,"users",u.uid,"days"), orderBy("data","asc"));
+      const snaps = await getDocs(q);
+
+      let bruto=0, liquido=0, km=0, horas=0, combustivel=0, alimentacao=0, reserva=0, outros=0, parcelas=0, seguros=0, litros=0;
+      let diasComMeta=0, diasMetaBatida=0;
+      const meta = Number(p.metaDiaria||0);
+
+      snaps.forEach(s=>{
+        const d = s.data();
+        const ds = d.data;
+        if(!ds) return;
+        if(ds < startStr || ds > endStr) return;
+
+        bruto += Number(d.ganhos||0);
+        liquido += Number(d.liquido||0);
+        km += Number(d.km||0);
+        horas += Number(d.horas||0);
+        litros += Number(d.litros||0);
+        combustivel += Number(d.combustivel||0);
+        alimentacao += Number(d.alimentacao||0);
+        reserva += Number(d.reservaManut||0);
+        outros += Number(d.outros||0);
+        if(d.parcelaPaga) parcelas += Number(p.valorParcela||0);
+        if(d.seguroPago) seguros += Number(p.valorSeguro||0);
+
+        if(meta>0){
+          diasComMeta++;
+          if(Number(d.ganhos||0) >= meta) diasMetaBatida++;
+        }
+      });
+
+      const custoKm = km>0 ? combustivel / km : 0;
+      const ganhoHora = horas>0 ? bruto / horas : 0;
+      const kmPorLitro = litros>0 ? km / litros : 0;
+
+      const tbody = $("relatorioTbody");
+      tbody.innerHTML = "";
+
+      const rows = [
+        ["Período do ciclo", `${startStr} → ${endStr}`],
+        ["Bruto (ciclo)", money(bruto)],
+        ["Líquido (ciclo)", money(liquido)],
+        ["Km rodados", km.toLocaleString("pt-BR")],
+        ["Horas", horas.toLocaleString("pt-BR")],
+        ["Km/L (média)", (kmPorLitro>0 ? kmPorLitro.toLocaleString("pt-BR",{maximumFractionDigits:2}) : "—")],
+        ["Combustível (R$)", money(combustivel)],
+        ["Custo combustível por km", money(custoKm)],
+        ["Ganho bruto por hora", money(ganhoHora)],
+        ["Alimentação (R$)", money(alimentacao)],
+        ["Reserva manutenção (R$)", money(reserva)],
+        ["Outros (R$)", money(outros)],
+        ["Parcelas pagas (marcadas)", money(parcelas)],
+        ["Seguro pago (marcado)", money(seguros)],
+      ];
+
+      if(meta>0){
+        rows.push(["Meta diária (R$)", money(meta)]);
+        rows.push(["Dias com meta batida", `${diasMetaBatida} / ${diasComMeta}`]);
+      }
+
+      rows.forEach(([k,v])=>{
+        const tr=document.createElement("tr");
+        const td1=document.createElement("td"); td1.textContent=k;
+        const td2=document.createElement("td"); td2.textContent=v; td2.className="right";
+        tr.append(td1, td2);
+        tbody.appendChild(tr);
+      });
+
+      showMsg($("relatorioOut"), "ok", "Relatório gerado com sucesso.");
+    }catch(e){
+      console.error(e);
+      showMsg($("relatorioOut"), "bad", `Erro: ${e?.code || e?.message || e}`);
+    }
+  });
+
+  /**********************************************************************
+   * Top chips (Dia + Total) + alertas
+   **********************************************************************/
+  let currentProfile = null;
+
   async function refreshTop(){
-    alerts.innerHTML="";
-    const user=auth.currentUser;
+    clearChips();
+    const user = auth.currentUser;
     if(!user) return;
 
-    const p=await getProfile(user.uid);
-    if(!p?.setup) return;
+    const p = await getProfile(user.uid);
+    currentProfile = p;
+
+    // Totais (sempre)
+    addChip("ok", `Bruto total: ${money(p?.totBruto || 0)}`);
+    addChip((Number(p?.totLiquido||0) >= 0) ? "ok" : "bad", `Líquido total: ${money(p?.totLiquido || 0)}`);
+
+    // Hoje (se existir)
+    const ymd = today();
+    try{
+      const snapHoje = await getDoc(dayRef(user.uid, ymd));
+      if(snapHoje.exists()){
+        const d = snapHoje.data();
+        addChip("ok", `Bruto hoje: ${money(d.ganhos || 0)}`);
+        addChip((Number(d.liquido||0) >= 0) ? "ok" : "bad", `Líquido hoje: ${money(d.liquido || 0)}`);
+      }else{
+        addChip("warn","Hoje: sem lançamento");
+      }
+    }catch{
+      addChip("warn","Hoje: erro ao buscar");
+    }
+
+    // Alertas e status
+    const day = new Date().getDate();
+    if(p?.diaCarro){
+      if(day === Number(p.diaCarro)) addChip("warn",`Hoje é dia do fechamento/pagamento do carro (dia ${p.diaCarro})`);
+      else addChip("ok",`Fechamento carro: dia ${p.diaCarro}`);
+    }
+    if(p?.diaSeguro){
+      if(day === Number(p.diaSeguro)) addChip("warn",`Hoje é dia de pagamento do seguro (dia ${p.diaSeguro})`);
+      else addChip("ok",`Seguro: dia ${p.diaSeguro} (${money(p.valorSeguro||0)})`);
+    }
+
+    const saldo = Number(p?.finSaldoAtual||0);
+    const rest = Number(p?.parcelasRestantes||0);
+    if(rest<=0 || saldo<=0) addChip("ok","Financiamento zerado ✅");
+    else addChip("bad",`Saldo financiamento: ${money(saldo)}`);
+
+    const meta = Number(p?.metaDiaria||0);
+    addChip(meta>0 ? "ok" : "warn", meta>0 ? `Meta diária: ${money(meta)}` : "Meta diária não definida");
+  }
+
+  async function refreshSide(){
+    const u = auth.currentUser;
+    if(!u) return;
+    const p = currentProfile || await getProfile(u.uid);
+    if(!p) return;
 
     $("finSaldoAtual").value = money(p.finSaldoAtual||0);
     $("parcelasRestantes").value = `${Number(p.parcelasRestantes||0)} / ${Number(p.qtdParcelas||0)}`;
     $("parcelaAuto").value = p.valorParcela ? money(p.valorParcela) : "—";
-
-    const day = new Date().getDate();
-
-    if(day === Number(p.diaCarro)) addChip("warn","Hoje é dia do fechamento/pagamento do carro.");
-    else addChip("ok",`Fechamento carro: dia ${p.diaCarro}`);
-
-    if(day === Number(p.diaSeguro)) addChip("warn","Hoje é dia de pagamento do seguro.");
-    else addChip("ok",`Seguro: dia ${p.diaSeguro} (${money(p.valorSeguro||0)})`);
-
-    if((p.finSaldoAtual||0) <= 0 || (p.parcelasRestantes||0) <= 0) addChip("ok","Financiamento zerado ✅");
-    else addChip("bad",`Saldo financiamento: ${money(p.finSaldoAtual||0)}`);
-
     $("statusRelatorio").value = canGenerateReport(p) ? "Liberado ✅ (hoje)" : `Bloqueado (dia ${p.diaCarro})`;
-
-    const meta = Number(p.metaDiaria||0);
-    if(meta>0) addChip("ok",`Meta diária: ${money(meta)}`);
-    else addChip("warn","Meta diária não definida");
   }
 
-  // auth state
-  auth.onAuthStateChanged(async (user)=>{
+  async function refreshPerfilUI(){
+    const u = auth.currentUser;
+    if(!u) return;
+    const p = currentProfile || await getProfile(u.uid);
+    if(!p) return;
+
+    $("perfilDiaCarro").value = p.diaCarro ?? "";
+    $("perfilDiaSeguro").value = p.diaSeguro ?? "";
+    $("perfilValorSeguro").value = p.valorSeguro ?? 0;
+    $("perfilMetaDiaria").value = p.metaDiaria ?? 0;
+    $("perfilParcelas").value = `${Number(p.parcelasRestantes||0)} / ${Number(p.qtdParcelas||0)}`;
+    $("perfilValorParcela").value = p.valorParcela ?? 0;
+    $("perfilSaldoAtual").value = p.finSaldoAtual ?? 0;
+
+    $("perfilTotBruto").value = money(p.totBruto||0);
+    $("perfilTotLiquido").value = money(p.totLiquido||0);
+  }
+
+  async function refreshAll(){
+    await refreshTop();
+    await refreshSide();
+    await refreshPerfilUI();
+
+    // diaData default = hoje
+    if(!$("diaData").value) $("diaData").value = today();
+    if(currentProfile) calcPreviewLiquido(currentProfile);
+
+    // pill relatorio
+    const p = currentProfile;
+    if(p?.setup){
+      const allowed = canGenerateReport(p);
+      $("pillRelatorio").className = "pill " + (allowed ? "ok" : "warn");
+      $("pillRelatorio").textContent = allowed ? "Liberado ✅" : `Bloqueado (dia ${p.diaCarro})`;
+    }
+  }
+
+  /**********************************************************************
+   * Auth State
+   **********************************************************************/
+  onAuthStateChanged(auth, async (user)=>{
     if(!user){
-      appView.classList.add("hidden");
-      loginView.classList.remove("hidden");
+      currentProfile = null;
+      showLogin();
       return;
     }
 
-    loginView.classList.add("hidden");
-    appView.classList.remove("hidden");
-    $("userLine").textContent = "Logado como: " + (user.email || user.uid);
+    $("whoami").textContent = `Logado como: ${user.email}`;
+    try{
+      const p = await getProfile(user.uid);
+      currentProfile = p;
 
-    $("diaRef").value = today();
-    $("mesRef").value = monthNow();
-
-    const p = await getProfile(user.uid);
-    if(!p?.setup){
-      $("setupBox").classList.remove("hidden");
-      refreshSetupTotals();
-      setMsg($("setupMsg"),"Preencha a configuração inicial para continuar.");
-    }else{
-      $("setupBox").classList.add("hidden");
-      calcDay(p);
-      await refreshTop();
+      if(!p || !p.setup){
+        showSetup();
+      }else{
+        showApp();
+        await refreshAll();
+      }
+    }catch(e){
+      console.error(e);
+      showLogin();
+      showMsg($("loginMsg"), "bad", `Erro ao carregar perfil: ${e?.code || e?.message || e}`);
     }
   });
+
+  // init
+  showLogin();
 </script>
 </body>
 </html>
