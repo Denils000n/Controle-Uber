@@ -21,7 +21,7 @@
     .col{flex:1;min-width:240px}
     label{display:block;margin-top:10px;color:var(--muted);font-size:12px}
     input,select{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1px solid #333;background:#0f0f12;color:#fff}
-    input[disabled]{opacity:.8}
+    input[disabled]{opacity:.85}
     button{padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;cursor:pointer;font-weight:700}
     button.secondary{background:#23232a;border:1px solid var(--line)}
     button.danger{background:#7f1d1d}
@@ -92,24 +92,28 @@
     <div id="setupBox" class="hidden">
       <hr>
       <h3 class="title">Configuração inicial (primeiro acesso)</h3>
-      <p class="sub">Define o fechamento mensal, seguro, meta diária e financiamento.</p>
+      <p class="sub">Define fechamento mensal, seguro, meta diária e parcelas do financiamento.</p>
 
       <div class="row">
         <div class="col">
-          <label>Saldo inicial do financiamento (R$)</label>
-          <input id="finSaldoInicial" type="number" step="0.01" placeholder="Ex: 45000"/>
+          <label>Quantidade de parcelas (total)</label>
+          <input id="qtdParcelas" type="number" min="1" step="1" placeholder="Ex: 48"/>
+        </div>
+        <div class="col">
+          <label>Valor da parcela (R$)</label>
+          <input id="valorParcela" type="number" step="0.01" placeholder="Ex: 980"/>
         </div>
         <div class="col">
           <label>Dia de fechamento/vencimento do carro (1 a 28)</label>
           <input id="diaCarro" type="number" min="1" max="28" placeholder="Ex: 21"/>
         </div>
+      </div>
+
+      <div class="row">
         <div class="col">
           <label>Meta diária (R$ de ganhos)</label>
           <input id="metaDiaria" type="number" step="0.01" placeholder="Ex: 250"/>
         </div>
-      </div>
-
-      <div class="row">
         <div class="col">
           <label>Valor do seguro (mensal) (R$)</label>
           <input id="valorSeguro" type="number" step="0.01" placeholder="Ex: 280"/>
@@ -118,9 +122,21 @@
           <label>Dia de pagamento do seguro (1 a 28)</label>
           <input id="diaSeguro" type="number" min="1" max="28" placeholder="Ex: 10"/>
         </div>
+      </div>
+
+      <div class="row">
         <div class="col">
           <label>Média do carro (km/L) (opcional)</label>
           <input id="mediaKML" type="number" step="0.01" placeholder="Ex: 10.5"/>
+          <div class="small">Só informativo (pode deixar em branco).</div>
+        </div>
+        <div class="col">
+          <label>Total do financiamento (auto)</label>
+          <input id="totalFin" type="text" disabled />
+        </div>
+        <div class="col">
+          <label>Saldo inicial (auto)</label>
+          <input id="saldoInicial" type="text" disabled />
         </div>
       </div>
 
@@ -130,7 +146,7 @@
       <div id="setupMsg" class="msg"></div>
     </div>
 
-    <!-- KPIs do dia -->
+    <!-- DIA -->
     <hr>
     <h3 class="title">Lançamento diário</h3>
     <p class="sub">Registre ganhos, km, horas, abastecimento e gastos do dia.</p>
@@ -182,11 +198,6 @@
 
     <div class="row">
       <div class="col">
-        <label>Aporte para abater financiamento (R$) (opcional)</label>
-        <input id="aporteFin" type="number" step="0.01" placeholder="Ex: 50"/>
-        <div class="small">Esse valor diminui o saldo do financiamento automaticamente.</div>
-      </div>
-      <div class="col">
         <label>Seguro pago hoje?</label>
         <select id="seguroPagoHoje">
           <option value="nao">Não</option>
@@ -199,6 +210,11 @@
           <option value="nao">Não</option>
           <option value="sim">Sim</option>
         </select>
+        <div class="small">Ao marcar "Sim", desconta 1 parcela e abate o saldo automaticamente.</div>
+      </div>
+      <div class="col">
+        <label>Valor da parcela (auto)</label>
+        <input id="parcelaAuto" type="text" disabled />
       </div>
     </div>
 
@@ -219,7 +235,7 @@
 
     <div class="grid" style="margin-top:12px">
       <div class="kpi">
-        <div class="small">Total gastos do dia</div>
+        <div class="small">Total gastos do dia (inclui parcela se paga)</div>
         <b id="kpiTotalGastosDia">R$ 0,00</b>
       </div>
       <div class="kpi">
@@ -238,7 +254,7 @@
     </div>
     <div id="diaMsg" class="msg"></div>
 
-    <!-- RELATÓRIO MENSAL -->
+    <!-- RELATÓRIO -->
     <hr>
     <h3 class="title">Relatório mensal (por fechamento do carro)</h3>
     <p class="sub">Só libera no dia do fechamento do carro (dia configurado).</p>
@@ -249,12 +265,27 @@
         <input id="mesRef" type="month"/>
       </div>
       <div class="col">
+        <label>Parcelas restantes</label>
+        <input id="parcelasRestantes" type="text" disabled/>
+      </div>
+      <div class="col">
         <label>Saldo financiamento atual</label>
         <input id="finSaldoAtual" type="text" disabled/>
       </div>
+    </div>
+
+    <div class="row">
       <div class="col">
         <label>Status do relatório</label>
         <input id="statusRelatorio" type="text" disabled/>
+      </div>
+      <div class="col">
+        <label>Total pago de parcelas no período</label>
+        <input id="mParcelasPagoTxt" type="text" disabled/>
+      </div>
+      <div class="col">
+        <label>Total gasto do período (inclui seguro + parcelas)</label>
+        <input id="mGastosPeriodoTxt" type="text" disabled/>
       </div>
     </div>
 
@@ -275,7 +306,7 @@
     </div>
 
     <div class="grid" style="margin-top:12px">
-      <div class="kpi"><div class="small">Custo por km</div><b id="mCustoKm">R$ 0,00</b></div>
+      <div class="kpi"><div class="small">Custo por km (combustível)</div><b id="mCustoKm">R$ 0,00</b></div>
       <div class="kpi"><div class="small">Ganho por hora</div><b id="mGanhoHora">R$ 0,00</b></div>
       <div class="kpi"><div class="small">Líquido do período</div><b id="mLiquido">R$ 0,00</b></div>
     </div>
@@ -290,7 +321,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
-  // ========= 1) COLE SEU CONFIG AQUI (APIKEY CORRETA) =========
+  // ========= COLE SEU CONFIG AQUI =========
   const firebaseConfig = {
     apiKey: "AIzaSyAZCCtQvKNn94cdJdsL-ceZNR87gwoQhKg",
     authDomain: "contuber-1c9ca.firebaseapp.com",
@@ -304,8 +335,8 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // ========= helpers =========
-  const $ = (id) => document.getElementById(id);
+  // helpers
+  const $ = (id)=>document.getElementById(id);
   const loginView = $("loginView");
   const appView = $("appView");
   const alerts = $("alerts");
@@ -319,45 +350,44 @@
     return v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
   }
   function today(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
-    const day = String(d.getDate()).padStart(2,"0");
+    const d=new Date();
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
+    const day=String(d.getDate()).padStart(2,"0");
     return `${y}-${m}-${day}`;
   }
   function monthNow(){
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth()+1).padStart(2,"0");
+    const d=new Date();
+    const y=d.getFullYear();
+    const m=String(d.getMonth()+1).padStart(2,"0");
     return `${y}-${m}`;
   }
-  function toMidnightTs(dateStr){ // "YYYY-MM-DD"
-    const [y,m,d] = dateStr.split("-").map(Number);
-    return new Date(y, m-1, d, 0,0,0,0);
+  function toMidnightTs(dateStr){
+    const [y,m,d]=dateStr.split("-").map(Number);
+    return new Date(y,m-1,d,0,0,0,0);
   }
   function addDays(dateObj, days){
-    const d = new Date(dateObj);
+    const d=new Date(dateObj);
     d.setDate(d.getDate()+days);
     return d;
   }
   function addChip(kind, text){
-    const div = document.createElement("div");
-    const dotClass = kind === "ok" ? "ok" : (kind === "warn" ? "warn" : "bad");
-    div.className = "chip";
-    div.innerHTML = `<span class="dot ${dotClass}"></span><span>${text}</span>`;
+    const dotClass = kind==="ok"?"ok":(kind==="warn"?"warn":"bad");
+    const div=document.createElement("div");
+    div.className="chip";
+    div.innerHTML=`<span class="dot ${dotClass}"></span><span>${text}</span>`;
     alerts.appendChild(div);
   }
 
-  // ========= refs =========
   const userRef = (uid)=> db.collection("users").doc(uid);
-  const dayRef  = (uid, date)=> db.collection("users").doc(uid).collection("dias").doc(date);
+  const dayRef  = (uid,date)=> db.collection("users").doc(uid).collection("dias").doc(date);
 
   async function getProfile(uid){
     const snap = await userRef(uid).get();
     return snap.exists ? snap.data() : null;
   }
 
-  // ========= auth actions =========
+  // LOGIN
   $("btnEntrar").onclick = async ()=>{
     setMsg($("loginMsg"),"");
     try{
@@ -368,7 +398,6 @@
       setMsg($("loginMsg"), "Erro: "+e.code, true);
     }
   };
-
   $("btnCadastrar").onclick = async ()=>{
     setMsg($("loginMsg"),"");
     try{
@@ -379,31 +408,43 @@
       setMsg($("loginMsg"), "Erro: "+e.code, true);
     }
   };
-
   $("btnLimpar").onclick = ()=>{
     $("email").value=""; $("senha").value="";
     setMsg($("loginMsg"),"");
   };
-
   $("btnLogout").onclick = async ()=> auth.signOut();
 
-  // ========= setup save =========
+  // Setup auto-cálculo total
+  function refreshSetupTotals(){
+    const qtd = Number($("qtdParcelas").value||0);
+    const val = Number($("valorParcela").value||0);
+    const total = (qtd>0 && val>0) ? qtd*val : 0;
+    $("totalFin").value = total ? money(total) : "";
+    $("saldoInicial").value = total ? money(total) : "";
+  }
+  ["qtdParcelas","valorParcela"].forEach(id=>{
+    $(id).addEventListener("input", refreshSetupTotals);
+  });
+
+  // Save setup
   $("btnSalvarSetup").onclick = async ()=>{
     const user = auth.currentUser;
     if(!user) return;
 
-    const finSaldoInicial = Number($("finSaldoInicial").value||0);
+    const qtdParcelas = Number($("qtdParcelas").value||0);
+    const valorParcela = Number($("valorParcela").value||0);
     const diaCarro = Number($("diaCarro").value||0);
     const metaDiaria = Number($("metaDiaria").value||0);
     const valorSeguro = Number($("valorSeguro").value||0);
     const diaSeguro = Number($("diaSeguro").value||0);
     const mediaKML = Number($("mediaKML").value||0);
 
-    if(!(finSaldoInicial>0)) return setMsg($("setupMsg"),"Informe o saldo inicial do financiamento.", true);
+    if(!(qtdParcelas>=1)) return setMsg($("setupMsg"),"Informe a quantidade de parcelas.", true);
+    if(!(valorParcela>0)) return setMsg($("setupMsg"),"Informe o valor da parcela.", true);
     if(!(diaCarro>=1 && diaCarro<=28)) return setMsg($("setupMsg"),"Dia do carro deve ser 1 a 28.", true);
-    if(!(metaDiaria>=0)) return setMsg($("setupMsg"),"Meta diária inválida.", true);
-    if(!(valorSeguro>=0)) return setMsg($("setupMsg"),"Valor seguro inválido.", true);
     if(!(diaSeguro>=1 && diaSeguro<=28)) return setMsg($("setupMsg"),"Dia do seguro deve ser 1 a 28.", true);
+
+    const totalFinanciamento = qtdParcelas * valorParcela;
 
     try{
       await userRef(user.uid).set({
@@ -413,10 +454,16 @@
         valorSeguro,
         metaDiaria,
         mediaKML: mediaKML>0 ? mediaKML : null,
-        finSaldoInicial,
-        finSaldoAtual: finSaldoInicial,
+
+        qtdParcelas,
+        valorParcela,
+        totalFinanciamento,
+        parcelasRestantes: qtdParcelas,
+        finSaldoAtual: totalFinanciamento,
+
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       }, {merge:true});
+
       setMsg($("setupMsg"),"Configuração salva ✅");
       $("setupBox").classList.add("hidden");
       await refreshTop();
@@ -426,7 +473,7 @@
     }
   };
 
-  // ========= cálculos do dia =========
+  // Cálculo do dia (inclui parcela se paga)
   function calcDay(profile){
     const ganhos = Number($("ganhos").value||0);
     const km = Number($("km").value||0);
@@ -436,7 +483,13 @@
     const resMan = Number($("reservaManut").value||0);
     const outros = Number($("outros").value||0);
 
-    const totalGastos = combRS + aliment + resMan + outros;
+    const parcelaValor = Number(profile?.valorParcela||0);
+    const parcelaPagaHoje = $("carroPagoHoje").value === "sim";
+    const parcelaNoDia = parcelaPagaHoje ? parcelaValor : 0;
+
+    $("parcelaAuto").value = parcelaValor ? money(parcelaValor) : "—";
+
+    const totalGastos = combRS + aliment + resMan + outros + parcelaNoDia;
     const liquido = ganhos - totalGastos;
 
     const ganhoHora = horas>0 ? ganhos/horas : 0;
@@ -459,19 +512,23 @@
       $("kpiMetaDia").style.color = "#a8a8b3";
     }
 
-    return {ganhos, km, horas, combRS, aliment, resMan, outros, totalGastos, liquido, ganhoHora, custoKm, ganhoKm};
+    return {ganhos, km, horas, combRS, aliment, resMan, outros, parcelaNoDia, totalGastos, liquido, ganhoHora, custoKm, ganhoKm};
   }
 
-  // recalcular ao digitar
-  ["ganhos","km","horas","combustivelRS","litros","alimentacao","reservaManut","outros"].forEach(id=>{
+  ["ganhos","km","horas","combustivelRS","litros","alimentacao","reservaManut","outros","carroPagoHoje"].forEach(id=>{
     $(id).addEventListener("input", async ()=>{
-      const u = auth.currentUser; if(!u) return;
-      const p = await getProfile(u.uid);
+      const u=auth.currentUser; if(!u) return;
+      const p=await getProfile(u.uid);
+      if(p?.setup) calcDay(p);
+    });
+    $(id).addEventListener("change", async ()=>{
+      const u=auth.currentUser; if(!u) return;
+      const p=await getProfile(u.uid);
       if(p?.setup) calcDay(p);
     });
   });
 
-  // ========= salvar dia =========
+  // Salvar dia
   $("btnSalvarDia").onclick = async ()=>{
     const user = auth.currentUser;
     if(!user) return;
@@ -487,7 +544,9 @@
 
     const c = calcDay(profile);
     const litros = Number($("litros").value||0);
-    const aporteFin = Number($("aporteFin").value||0);
+
+    const seguroPagoHoje = $("seguroPagoHoje").value === "sim";
+    const carroPagoHoje = $("carroPagoHoje").value === "sim";
 
     const payload = {
       date,
@@ -500,14 +559,17 @@
       alimentacao: c.aliment,
       reservaManut: c.resMan,
       outros: c.outros,
+
+      parcelaPagoHoje: carroPagoHoje,
+      parcelaValor: c.parcelaNoDia, // 0 ou valorParcela
+
       totalGastos: c.totalGastos,
       liquido: c.liquido,
       ganhoHora: c.ganhoHora,
       custoKm: c.custoKm,
       ganhoKm: c.ganhoKm,
-      seguroPagoHoje: $("seguroPagoHoje").value === "sim",
-      carroPagoHoje: $("carroPagoHoje").value === "sim",
-      aporteFin: aporteFin,
+
+      seguroPagoHoje: seguroPagoHoje,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
 
@@ -515,10 +577,14 @@
       // salva dia
       await dayRef(user.uid, date).set(payload, {merge:true});
 
-      // atualiza saldo financiamento se tiver aporte
-      if(aporteFin > 0){
-        const novoSaldo = Math.max(0, Number(profile.finSaldoAtual||0) - aporteFin);
-        await userRef(user.uid).set({ finSaldoAtual: novoSaldo }, {merge:true});
+      // se parcela paga hoje -> desconta 1 e abate saldo
+      if(carroPagoHoje && Number(profile.parcelasRestantes||0) > 0){
+        const novoRest = Math.max(0, Number(profile.parcelasRestantes||0) - 1);
+        const novoSaldo = Math.max(0, Number(profile.finSaldoAtual||0) - Number(profile.valorParcela||0));
+        await userRef(user.uid).set({
+          parcelasRestantes: novoRest,
+          finSaldoAtual: novoSaldo
+        }, {merge:true});
       }
 
       setMsg($("diaMsg"),"Dia salvo ✅");
@@ -529,7 +595,7 @@
     }
   };
 
-  // ========= carregar dia =========
+  // Carregar dia
   $("btnCarregarDia").onclick = async ()=>{
     const user = auth.currentUser;
     if(!user) return;
@@ -560,8 +626,7 @@
       $("reservaManut").value = d.reservaManut ?? "";
       $("outros").value = d.outros ?? "";
       $("seguroPagoHoje").value = d.seguroPagoHoje ? "sim" : "nao";
-      $("carroPagoHoje").value = d.carroPagoHoje ? "sim" : "nao";
-      $("aporteFin").value = d.aporteFin ?? "";
+      $("carroPagoHoje").value = d.parcelaPagoHoje ? "sim" : "nao";
       calcDay(profile);
       setMsg($("diaMsg"),"Dia carregado ✅");
     }catch(e){
@@ -570,26 +635,21 @@
     }
   };
 
-  // ========= relatório mensal por fechamento =========
+  // Relatório mensal
   function canGenerateReport(profile){
     const now = new Date();
     return now.getDate() === Number(profile.diaCarro||0);
   }
-
   function periodByClosing(monthStr, diaCarro){
-    // Período: do dia seguinte ao fechamento anterior até o fechamento do mês escolhido.
-    // Ex: mêsRef 2026-02 e diaCarro 21:
-    // start = 2026-01-22, end = 2026-02-21 (inclusive)
-    const [y, m] = monthStr.split("-").map(Number);
-    const endDate = new Date(y, m-1, diaCarro, 0,0,0,0);
-    const startDate = addDays(new Date(y, m-2, diaCarro, 0,0,0,0), 1); // dia seguinte do mês anterior
-    // query em Firestore será >= start e < end+1
-    const endExclusive = addDays(endDate, 1);
-    return {startDate, endDate, endExclusive};
+    const [y,m]=monthStr.split("-").map(Number);
+    const endDate = new Date(y,m-1,diaCarro,0,0,0,0);
+    const startDate = addDays(new Date(y,m-2,diaCarro,0,0,0,0), 1);
+    const endExclusive = addDays(endDate,1);
+    return {startDate,endDate,endExclusive};
   }
 
   $("btnGerarRelatorio").onclick = async ()=>{
-    const user = auth.currentUser;
+    const user=auth.currentUser;
     if(!user) return;
 
     const profile = await getProfile(user.uid);
@@ -606,7 +666,7 @@
     const monthStr = $("mesRef").value || monthNow();
     $("mesRef").value = monthStr;
 
-    const {startDate, endDate, endExclusive} = periodByClosing(monthStr, Number(profile.diaCarro));
+    const {startDate,endDate,endExclusive} = periodByClosing(monthStr, Number(profile.diaCarro));
 
     try{
       const q = await db.collection("users").doc(user.uid).collection("dias")
@@ -614,7 +674,7 @@
         .where("ts", "<", firebase.firestore.Timestamp.fromDate(endExclusive))
         .get();
 
-      let ganhos=0, km=0, horas=0, comb=0, alim=0, resMan=0, outros=0;
+      let ganhos=0, km=0, horas=0, comb=0, alim=0, resMan=0, outros=0, parcelasPago=0;
       let metasBatidas=0, diasCount=0;
 
       q.forEach(doc=>{
@@ -626,13 +686,14 @@
         alim += Number(d.alimentacao||0);
         resMan += Number(d.reservaManut||0);
         outros += Number(d.outros||0);
+        parcelasPago += Number(d.parcelaValor||0);
 
         diasCount += 1;
         const meta = Number(profile.metaDiaria||0);
         if(meta>0 && Number(d.ganhos||0) >= meta) metasBatidas += 1;
       });
 
-      const totalGastos = comb + alim + resMan + outros + (Number(profile.valorSeguro||0)); // seguro mensal entra no período
+      const totalGastos = comb + alim + resMan + outros + parcelasPago + Number(profile.valorSeguro||0);
       const liquido = ganhos - totalGastos;
 
       const custoKm = km>0 ? comb/km : 0;
@@ -650,7 +711,11 @@
       $("mGanhoHora").textContent = money(ganhoHora);
       $("mLiquido").textContent = money(liquido);
 
-      $("statusRelatorio").value = `Liberado ✅ (${startDate.toLocaleDateString("pt-BR")} → ${endDate.toLocaleDateString("pt-BR")})`;
+      $("mParcelasPagoTxt").value = money(parcelasPago);
+      $("mGastosPeriodoTxt").value = money(totalGastos);
+
+      $("statusRelatorio").value =
+        `Liberado ✅ (${startDate.toLocaleDateString("pt-BR")} → ${endDate.toLocaleDateString("pt-BR")})`;
 
       setMsg($("relMsg"),
         `Período: ${startDate.toLocaleDateString("pt-BR")} até ${endDate.toLocaleDateString("pt-BR")} | `+
@@ -662,41 +727,38 @@
     }
   };
 
-  // ========= alertas topo =========
+  // Alertas topo
   async function refreshTop(){
-    alerts.innerHTML = "";
-    const user = auth.currentUser;
+    alerts.innerHTML="";
+    const user=auth.currentUser;
     if(!user) return;
 
-    const p = await getProfile(user.uid);
+    const p=await getProfile(user.uid);
     if(!p?.setup) return;
 
-    // saldo financiamento
-    $("finSaldoAtual").value = money(p.finSaldoAtual || 0);
+    $("finSaldoAtual").value = money(p.finSaldoAtual||0);
+    $("parcelasRestantes").value = `${Number(p.parcelasRestantes||0)} / ${Number(p.qtdParcelas||0)}`;
+    $("parcelaAuto").value = p.valorParcela ? money(p.valorParcela) : "—";
 
-    // alertas de hoje
-    const now = new Date();
-    const day = now.getDate();
+    const day = new Date().getDate();
 
-    if(day === Number(p.diaCarro)) addChip("warn", "Hoje é dia do fechamento/pagamento do carro.");
-    else addChip("ok", `Fechamento carro: dia ${p.diaCarro}`);
+    if(day === Number(p.diaCarro)) addChip("warn","Hoje é dia do fechamento/pagamento do carro.");
+    else addChip("ok",`Fechamento carro: dia ${p.diaCarro}`);
 
-    if(day === Number(p.diaSeguro)) addChip("warn", "Hoje é dia de pagamento do seguro.");
-    else addChip("ok", `Seguro: dia ${p.diaSeguro} (${money(p.valorSeguro||0)})`);
+    if(day === Number(p.diaSeguro)) addChip("warn","Hoje é dia de pagamento do seguro.");
+    else addChip("ok",`Seguro: dia ${p.diaSeguro} (${money(p.valorSeguro||0)})`);
 
-    if((p.finSaldoAtual||0) <= 0) addChip("ok", "Financiamento zerado ✅");
-    else addChip("bad", `Saldo financiamento: ${money(p.finSaldoAtual||0)}`);
+    if((p.finSaldoAtual||0) <= 0 || (p.parcelasRestantes||0) <= 0) addChip("ok","Financiamento zerado ✅");
+    else addChip("bad",`Saldo financiamento: ${money(p.finSaldoAtual||0)}`);
 
-    // status relatório
     $("statusRelatorio").value = canGenerateReport(p) ? "Liberado ✅ (hoje)" : `Bloqueado (dia ${p.diaCarro})`;
 
-    // meta do dia (instantâneo)
     const meta = Number(p.metaDiaria||0);
-    if(meta>0) addChip("ok", `Meta diária: ${money(meta)}`);
-    else addChip("warn", "Meta diária não definida");
+    if(meta>0) addChip("ok",`Meta diária: ${money(meta)}`);
+    else addChip("warn","Meta diária não definida");
   }
 
-  // ========= estado auth (faz “avançar” de verdade) =========
+  // auth state
   auth.onAuthStateChanged(async (user)=>{
     if(!user){
       appView.classList.add("hidden");
@@ -714,6 +776,7 @@
     const p = await getProfile(user.uid);
     if(!p?.setup){
       $("setupBox").classList.remove("hidden");
+      refreshSetupTotals();
       setMsg($("setupMsg"),"Preencha a configuração inicial para continuar.");
     }else{
       $("setupBox").classList.add("hidden");
