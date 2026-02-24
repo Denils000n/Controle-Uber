@@ -1,160 +1,585 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ContUber</title>
-
-<style>
-body{font-family:Arial;background:#0f0f12;color:#fff;margin:0;padding:20px}
-.card{background:#1b1b22;padding:20px;border-radius:12px;margin-bottom:20px}
-input{width:100%;padding:8px;margin:5px 0;border-radius:8px;border:none}
-button{padding:8px 12px;border:none;border-radius:8px;background:#ff7a00;color:#fff;cursor:pointer;margin-top:10px}
-.hidden{display:none}
-</style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ContUber</title>
+  <link rel="icon" type="image/x-icon" href="./favicon_contuber_full.ico" />
+  <style>
+    :root{
+      --bg:#0b0b0c; --card:#141416; --line:#2a2a2e; --text:#f5f5f5; --muted:#b7b7b7;
+      --ok:#22c55e; --warn:#f59e0b; --danger:#ef4444; --accent:#ff7a00;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    body{margin:0;background:var(--bg);color:var(--text)}
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    h1{margin:0;font-size:22px}
+    .muted{color:var(--muted);font-size:12px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin:12px 0}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    @media(max-width:760px){.row{grid-template-columns:1fr}}
+    label{display:block;margin:0 0 6px}
+    input{
+      width:100%;padding:10px;border-radius:10px;border:1px solid var(--line);
+      background:#0f0f11;color:var(--text);outline:none
+    }
+    button{
+      padding:10px 12px;border-radius:10px;border:1px solid var(--line);
+      background:var(--accent);color:#fff;cursor:pointer
+    }
+    button:hover{filter:brightness(1.08)}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .hidden{display:none}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-size:12px}
+    .pill.ok{border-color:rgba(34,197,94,.35);color:var(--ok)}
+    .pill.warn{border-color:rgba(245,158,11,.35);color:var(--warn)}
+    .pill.danger{border-color:rgba(239,68,68,.35);color:var(--danger)}
+    .alert{display:none;border-radius:14px;padding:12px 14px;border:1px solid var(--line);background:#101012;margin:12px 0}
+    .alert.show{display:block}
+    .checks{display:flex;gap:14px;flex-wrap:wrap;margin-top:8px}
+    .check{display:flex;align-items:center;gap:8px}
+    .check input{width:18px;height:18px}
+    .kpi{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+    @media(max-width:760px){.kpi{grid-template-columns:1fr}}
+    .kpi .box{border:1px solid var(--line);border-radius:14px;padding:12px;background:#0f0f11}
+    .kpi .val{font-size:20px;font-weight:700;margin-top:4px}
+    .split{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .msg{margin-top:10px}
+    .linkbtn{background:#0f0f11;color:var(--text)}
+  </style>
 </head>
+
 <body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>ContUber</h1>
+        <div class="muted">Controle mensal por fechamento (dia do carro) + seguro</div>
+      </div>
+      <div id="userBar" class="muted"></div>
+    </div>
 
-<h1>ContUber</h1>
+    <div id="topAlert" class="alert">
+      <strong id="topAlertTitle"></strong>
+      <span id="topAlertText"></span>
+    </div>
 
-<div id="auth" class="card">
-<h3>Login</h3>
-<input id="email" placeholder="Email">
-<input id="senha" type="password" placeholder="Senha">
-<button onclick="login()">Entrar</button>
-<button onclick="registrar()">Cadastrar</button>
-</div>
+    <!-- LOGIN -->
+    <div id="authView" class="card">
+      <h2 style="margin:0 0 8px;">Login</h2>
+      <div class="row">
+        <div>
+          <label class="muted">Email</label>
+          <input id="email" type="email" placeholder="seuemail@exemplo.com" />
+        </div>
+        <div>
+          <label class="muted">Senha (mín 6 caracteres)</label>
+          <input id="password" type="password" placeholder="••••••••" />
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button id="btnLogin">Entrar</button>
+        <button id="btnRegister">Cadastrar</button>
+        <button id="btnClear" class="linkbtn">Limpar</button>
+      </div>
+      <p id="authMsg" class="muted msg"></p>
+    </div>
 
-<div id="setup" class="card hidden">
-<h3>Configuração Inicial</h3>
-<input id="financiado" type="number" placeholder="Valor financiado">
-<input id="seguroValor" type="number" placeholder="Valor do seguro">
-<input id="parcelaValor" type="number" placeholder="Valor da parcela do carro">
-<input id="diaCarro" type="number" placeholder="Dia do carro (1-28)">
-<input id="diaSeguro" type="number" placeholder="Dia do seguro (1-28)">
-<button onclick="salvarSetup()">Salvar</button>
-</div>
+    <!-- SETUP -->
+    <div id="setupView" class="card hidden">
+      <div class="split">
+        <h2 style="margin:0;">Configuração inicial</h2>
+        <button id="btnLogout1" class="linkbtn">Sair</button>
+      </div>
+      <p class="muted" style="margin-top:6px;">
+        Primeiro acesso: defina valores e dias de pagamento. O dia do carro é o fechamento do relatório.
+      </p>
 
-<div id="app" class="card hidden">
-<h3>Painel</h3>
+      <div class="row">
+        <div>
+          <label class="muted">Valor financiado (R$)</label>
+          <input id="financedValue" type="number" step="0.01" placeholder="Ex: 25000" />
+        </div>
 
-<input id="bruto" type="number" placeholder="Valor bruto">
-<input id="combustivel" type="number" placeholder="Combustível">
-<input id="manutencao" type="number" placeholder="Manutenção">
-<input id="outros" type="number" placeholder="Outros gastos">
+        <div>
+          <label class="muted">Valor do seguro (R$)</label>
+          <input id="insuranceValue" type="number" step="0.01" placeholder="Ex: 3200" />
+        </div>
 
-<label><input type="checkbox" id="parcelaPaga"> Parcela paga</label><br>
-<label><input type="checkbox" id="seguroPago"> Seguro pago</label>
+        <div>
+          <label class="muted">Valor da parcela do carro (R$)</label>
+          <input id="carInstallmentValue" type="number" step="0.01" placeholder="Ex: 980" />
+        </div>
 
-<h3>Total Gastos: R$ <span id="totalGastos">0</span></h3>
-<h2>Líquido: R$ <span id="liquido">0</span></h2>
+        <div>
+          <label class="muted">Dia do carro (fechamento do relatório) 1–28</label>
+          <input id="carDueDay" type="number" min="1" max="28" step="1" placeholder="Ex: 21" />
+        </div>
 
-<button onclick="salvarCiclo()">Salvar Ciclo</button>
-<button onclick="logout()">Sair</button>
-</div>
+        <div>
+          <label class="muted">Dia do seguro 1–28</label>
+          <input id="insuranceDueDay" type="number" min="1" max="28" step="1" placeholder="Ex: 10" />
+        </div>
+      </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+      <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+        <button id="btnSaveSetup">Salvar configuração</button>
+      </div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAZCCtQvKNn94cdJdSL-ceZNR87gwoQhKg",
-  authDomain: "contuber-1c9ca.firebaseapp.com",
-  projectId: "contuber-1c9ca",
-  storageBucket: "contuber-1c9ca.firebasestorage.app",
-  messagingSenderId: "333645182595",
-  appId: "1:333645182595:web:147d3ad84116b595324db6"
-};
+      <p id="setupMsg" class="muted msg"></p>
+    </div>
 
-const appFirebase = initializeApp(firebaseConfig);
-const auth = getAuth(appFirebase);
-const db = getFirestore(appFirebase);
+    <!-- APP -->
+    <div id="appView" class="card hidden">
+      <div class="split">
+        <div>
+          <h2 style="margin:0;">Painel</h2>
+          <div class="muted" id="cycleInfo">—</div>
+        </div>
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+          <span id="reportPill" class="pill">—</span>
+          <button id="btnLogout2" class="linkbtn">Sair</button>
+        </div>
+      </div>
 
-const authDiv=document.getElementById("auth");
-const setupDiv=document.getElementById("setup");
-const appDiv=document.getElementById("app");
+      <div class="hr"></div>
 
-function mostrar(div){
-authDiv.classList.add("hidden");
-setupDiv.classList.add("hidden");
-appDiv.classList.add("hidden");
-div.classList.remove("hidden");
-}
+      <div class="row">
+        <div class="card" style="margin:0;">
+          <div style="font-weight:700;margin-bottom:6px;">Base do usuário</div>
+          <div class="muted">Financiado: <strong>R$ <span id="financedOut">—</span></strong></div>
+          <div class="muted">Seguro: <strong>R$ <span id="insuranceOut">—</span></strong></div>
+          <div class="muted">Parcela carro: <strong>R$ <span id="carInstallmentOut">—</span></strong></div>
+          <div class="muted">Dia carro (fechamento): <strong><span id="carDueDayOut">—</span></strong></div>
+          <div class="muted">Dia seguro: <strong><span id="insuranceDueDayOut">—</span></strong></div>
+        </div>
 
-window.login=async()=>{
-await signInWithEmailAndPassword(auth,email.value,senha.value);
-}
+        <div class="card" style="margin:0;">
+          <div style="font-weight:700;margin-bottom:6px;">Resumo do ciclo</div>
 
-window.registrar=async()=>{
-await createUserWithEmailAndPassword(auth,email.value,senha.value);
-}
+          <div class="row">
+            <div>
+              <label class="muted">Valor bruto (R$)</label>
+              <input id="grossValue" type="number" step="0.01" placeholder="Ex: 4500" />
+            </div>
+            <div>
+              <label class="muted">Combustível (R$)</label>
+              <input id="fuelExpense" type="number" step="0.01" placeholder="Ex: 1200" />
+            </div>
+            <div>
+              <label class="muted">Manutenção (R$)</label>
+              <input id="maintenanceExpense" type="number" step="0.01" placeholder="Ex: 200" />
+            </div>
+            <div>
+              <label class="muted">Outros gastos (R$)</label>
+              <input id="otherExpense" type="number" step="0.01" placeholder="Ex: 150" />
+            </div>
+          </div>
 
-window.logout=()=>signOut(auth);
+          <div class="checks">
+            <label class="check">
+              <input id="carPaid" type="checkbox" />
+              <span>Parcela do carro paga (desconta do líquido)</span>
+            </label>
+            <label class="check">
+              <input id="insurancePaid" type="checkbox" />
+              <span>Seguro pago (desconta do líquido)</span>
+            </label>
+          </div>
 
-window.salvarSetup=async()=>{
-const user=auth.currentUser;
-await setDoc(doc(db,"users",user.uid,"dados","perfil"),{
-financiado:+financiado.value,
-seguroValor:+seguroValor.value,
-parcelaValor:+parcelaValor.value,
-diaCarro:+diaCarro.value,
-diaSeguro:+diaSeguro.value,
-setup:true
-});
-mostrar(appDiv);
-}
+          <div class="kpi">
+            <div class="box">
+              <div class="muted">Total de gastos</div>
+              <div class="val">R$ <span id="totalExpensesOut">0,00</span></div>
+            </div>
+            <div class="box">
+              <div class="muted">Valor líquido</div>
+              <div class="val">R$ <span id="netValueOut">0,00</span></div>
+            </div>
+          </div>
 
-window.salvarCiclo=async()=>{
-const user=auth.currentUser;
-const brutoVal=+bruto.value||0;
-const gastos=+combustivel.value+ +manutencao.value+ +outros.value;
-const parcela=parcelaPaga.checked?+parcelaValor.value:0;
-const seguro=seguroPago.checked?+seguroValor.value:0;
-const total=gastos+parcela+seguro;
-const liquidoVal=brutoVal-total;
+          <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;">
+            <button id="btnSaveCycle">Salvar ciclo</button>
+            <button id="btnReloadCycle" class="linkbtn">Recarregar</button>
+          </div>
 
-await setDoc(doc(db,"users",user.uid,"ciclo","atual"),{
-bruto:brutoVal,
-combustivel:+combustivel.value,
-manutencao:+manutencao.value,
-outros:+outros.value,
-parcelaPaga:parcelaPaga.checked,
-seguroPago:seguroPago.checked,
-total,
-liquido:liquidoVal
-});
+          <p id="cycleMsg" class="muted msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
 
-alert("Ciclo salvo!");
-}
+  <!-- Firebase (CDN compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-function calcular(){
-const brutoVal=+bruto.value||0;
-const gastos=+combustivel.value+ +manutencao.value+ +outros.value;
-const parcela=parcelaPaga.checked?+parcelaValor.value:0;
-const seguro=seguroPago.checked?+seguroValor.value:0;
-const total=gastos+parcela+seguro;
-const liquidoVal=brutoVal-total;
-totalGastos.textContent=total.toFixed(2);
-liquido.textContent=liquidoVal.toFixed(2);
-}
+  <script>
+    // === SEU firebaseConfig ===
+    const firebaseConfig = {
+      apiKey: "AIzaSyAZCCtQvKNn94cdJdSL-ceZNR87gwoQhKg",
+      authDomain: "contuber-1c9ca.firebaseapp.com",
+      projectId: "contuber-1c9ca",
+      storageBucket: "contuber-1c9ca.firebasestorage.app",
+      messagingSenderId: "333645182595",
+      appId: "1:333645182595:web:147d3ad84116b595324db6"
+    };
 
-["input","change"].forEach(ev=>{
-document.addEventListener(ev,calcular);
-});
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-onAuthStateChanged(auth,async(user)=>{
-if(!user){mostrar(authDiv);return;}
-const snap=await getDoc(doc(db,"users",user.uid,"dados","perfil"));
-if(!snap.exists()||!snap.data().setup){mostrar(setupDiv);}
-else{
-const dados=snap.data();
-parcelaValor.value=dados.parcelaValor;
-seguroValor.value=dados.seguroValor;
-mostrar(appDiv);
-}
-});
-</script>
+    // Views
+    const authView = document.getElementById("authView");
+    const setupView = document.getElementById("setupView");
+    const appView = document.getElementById("appView");
 
+    // Top
+    const userBar = document.getElementById("userBar");
+    const topAlert = document.getElementById("topAlert");
+    const topAlertTitle = document.getElementById("topAlertTitle");
+    const topAlertText = document.getElementById("topAlertText");
+
+    // Auth inputs
+    const emailEl = document.getElementById("email");
+    const passEl = document.getElementById("password");
+    const authMsg = document.getElementById("authMsg");
+
+    // Setup inputs
+    const financedValueEl = document.getElementById("financedValue");
+    const insuranceValueEl = document.getElementById("insuranceValue");
+    const carInstallmentValueEl = document.getElementById("carInstallmentValue");
+    const carDueDayEl = document.getElementById("carDueDay");
+    const insuranceDueDayEl = document.getElementById("insuranceDueDay");
+    const setupMsg = document.getElementById("setupMsg");
+
+    // App outputs
+    const cycleInfo = document.getElementById("cycleInfo");
+    const reportPill = document.getElementById("reportPill");
+
+    const financedOut = document.getElementById("financedOut");
+    const insuranceOut = document.getElementById("insuranceOut");
+    const carInstallmentOut = document.getElementById("carInstallmentOut");
+    const carDueDayOut = document.getElementById("carDueDayOut");
+    const insuranceDueDayOut = document.getElementById("insuranceDueDayOut");
+
+    // Cycle inputs
+    const grossValueEl = document.getElementById("grossValue");
+    const fuelExpenseEl = document.getElementById("fuelExpense");
+    const maintenanceExpenseEl = document.getElementById("maintenanceExpense");
+    const otherExpenseEl = document.getElementById("otherExpense");
+    const carPaidEl = document.getElementById("carPaid");
+    const insurancePaidEl = document.getElementById("insurancePaid");
+    const totalExpensesOut = document.getElementById("totalExpensesOut");
+    const netValueOut = document.getElementById("netValueOut");
+    const cycleMsg = document.getElementById("cycleMsg");
+
+    function show(view){
+      authView.classList.add("hidden");
+      setupView.classList.add("hidden");
+      appView.classList.add("hidden");
+      view.classList.remove("hidden");
+    }
+
+    function toNum(v){
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function moneyBR(n){
+      if (!Number.isFinite(n)) return "0,00";
+      return n.toFixed(2).replace(".", ",");
+    }
+
+    function isIntInRange(n, min, max){
+      return Number.isInteger(n) && n >= min && n <= max;
+    }
+
+    function setAlert(title, text){
+      topAlert.classList.add("show");
+      topAlertTitle.textContent = title;
+      topAlertText.textContent = text;
+    }
+    function clearAlert(){
+      topAlert.classList.remove("show");
+      topAlertTitle.textContent = "";
+      topAlertText.textContent = "";
+    }
+
+    function fmtDate(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+
+    function computeCycle(carDueDay){
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = now.getMonth();
+      const today = now.getDate();
+
+      const endMonth = (today >= carDueDay) ? m : (m - 1);
+      const endDate = new Date(y, endMonth, carDueDay);
+
+      const startDate = new Date(endDate);
+      startDate.setMonth(startDate.getMonth() - 1);
+      startDate.setDate(carDueDay + 1);
+
+      return { startDate, endDate };
+    }
+
+    function cycleIdFromDates(startDate, endDate){
+      return `${fmtDate(startDate)}_to_${fmtDate(endDate)}`;
+    }
+
+    function reportAvailable(carDueDay){
+      return new Date().getDate() >= carDueDay;
+    }
+
+    // Firestore refs
+    function profileRef(uid){
+      return db.doc(`users/${uid}/private/profile`);
+    }
+    function cycleRef(uid, cycleId){
+      return db.doc(`users/${uid}/cycles/${cycleId}`);
+    }
+
+    async function ensureProfile(uid){
+      const ref = profileRef(uid);
+      const snap = await ref.get();
+      if (!snap.exists){
+        await ref.set({ createdAt: firebase.firestore.FieldValue.serverTimestamp(), setupDone: false }, { merge: true });
+        return { setupDone: false };
+      }
+      return snap.data();
+    }
+
+    function recalcNet(profile){
+      const gross = toNum(grossValueEl.value);
+      const fuel = toNum(fuelExpenseEl.value);
+      const maint = toNum(maintenanceExpenseEl.value);
+      const other = toNum(otherExpenseEl.value);
+
+      const carCost = carPaidEl.checked ? toNum(profile.carInstallmentValue) : 0;
+      const insuranceCost = insurancePaidEl.checked ? toNum(profile.insuranceValue) : 0;
+
+      const totalExpenses = fuel + maint + other + carCost + insuranceCost;
+      const net = gross - totalExpenses;
+
+      totalExpensesOut.textContent = moneyBR(totalExpenses);
+      netValueOut.textContent = moneyBR(net);
+
+      return { gross, fuel, maint, other, totalExpenses, net };
+    }
+
+    async function loadCycle(uid, cycleId, profile){
+      cycleMsg.textContent = "";
+      const snap = await cycleRef(uid, cycleId).get();
+
+      if (!snap.exists){
+        grossValueEl.value = "";
+        fuelExpenseEl.value = "";
+        maintenanceExpenseEl.value = "";
+        otherExpenseEl.value = "";
+        carPaidEl.checked = false;
+        insurancePaidEl.checked = false;
+        recalcNet(profile);
+        cycleMsg.textContent = "Sem dados salvos para este ciclo (vazio).";
+        return;
+      }
+
+      const d = snap.data();
+      grossValueEl.value = d.gross ?? "";
+      fuelExpenseEl.value = d.fuel ?? "";
+      maintenanceExpenseEl.value = d.maintenance ?? "";
+      otherExpenseEl.value = d.other ?? "";
+      carPaidEl.checked = !!d.carPaid;
+      insurancePaidEl.checked = !!d.insurancePaid;
+
+      recalcNet(profile);
+      cycleMsg.textContent = "Dados do ciclo carregados ✅";
+    }
+
+    async function saveCycle(uid, cycleId, profile){
+      cycleMsg.textContent = "";
+      const calc = recalcNet(profile);
+
+      await cycleRef(uid, cycleId).set({
+        cycleId,
+        gross: calc.gross,
+        fuel: calc.fuel,
+        maintenance: calc.maint,
+        other: calc.other,
+        carPaid: carPaidEl.checked,
+        insurancePaid: insurancePaidEl.checked,
+        totalExpenses: calc.totalExpenses,
+        net: calc.net,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      cycleMsg.textContent = "Ciclo salvo ✅";
+    }
+
+    function attachRecalc(profile){
+      const els = [grossValueEl, fuelExpenseEl, maintenanceExpenseEl, otherExpenseEl, carPaidEl, insurancePaidEl];
+      els.forEach(el => el.addEventListener("input", () => recalcNet(profile)));
+      els.forEach(el => el.addEventListener("change", () => recalcNet(profile)));
+    }
+
+    // Auth buttons
+    document.getElementById("btnClear").addEventListener("click", () => {
+      emailEl.value = "";
+      passEl.value = "";
+      authMsg.textContent = "";
+    });
+
+    document.getElementById("btnLogin").addEventListener("click", async () => {
+      authMsg.textContent = "";
+      try{
+        await auth.signInWithEmailAndPassword(emailEl.value.trim(), passEl.value);
+      }catch(e){
+        console.error(e);
+        authMsg.textContent = `Erro: ${e.code || e.message || e}`;
+      }
+    });
+
+    document.getElementById("btnRegister").addEventListener("click", async () => {
+      authMsg.textContent = "";
+      try{
+        await auth.createUserWithEmailAndPassword(emailEl.value.trim(), passEl.value);
+        authMsg.textContent = "Usuário cadastrado ✅";
+      }catch(e){
+        console.error(e);
+        authMsg.textContent = `Erro: ${e.code || e.message || e}`;
+      }
+    });
+
+    async function doLogout(){ await auth.signOut(); }
+    document.getElementById("btnLogout1").addEventListener("click", doLogout);
+    document.getElementById("btnLogout2").addEventListener("click", doLogout);
+
+    // Setup save
+    document.getElementById("btnSaveSetup").addEventListener("click", async () => {
+      setupMsg.textContent = "";
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const financed = Number(financedValueEl.value);
+      const insurance = Number(insuranceValueEl.value);
+      const installment = Number(carInstallmentValueEl.value);
+      const carDueDay = Number(carDueDayEl.value);
+      const insuranceDueDay = Number(insuranceDueDayEl.value);
+
+      if (!Number.isFinite(financed) || financed <= 0){ setupMsg.textContent = "Informe um valor financiado válido."; return; }
+      if (!Number.isFinite(insurance) || insurance <= 0){ setupMsg.textContent = "Informe um valor do seguro válido."; return; }
+      if (!Number.isFinite(installment) || installment <= 0){ setupMsg.textContent = "Informe um valor da parcela válido."; return; }
+      if (!isIntInRange(carDueDay, 1, 28)){ setupMsg.textContent = "Dia do carro inválido (use 1 a 28)."; return; }
+      if (!isIntInRange(insuranceDueDay, 1, 28)){ setupMsg.textContent = "Dia do seguro inválido (use 1 a 28)."; return; }
+
+      await profileRef(user.uid).set({
+        financedValue: financed,
+        insuranceValue: insurance,
+        carInstallmentValue: installment,
+        carDueDay,
+        insuranceDueDay,
+        setupDone: true,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }, { merge: true });
+
+      setupMsg.textContent = "Configuração salva ✅";
+    });
+
+    // Cycle buttons
+    document.getElementById("btnSaveCycle").addEventListener("click", async () => {
+      const user = auth.currentUser; if (!user) return;
+      const profile = (await profileRef(user.uid).get()).data();
+
+      const { startDate, endDate } = computeCycle(profile.carDueDay);
+      const cycleId = cycleIdFromDates(startDate, endDate);
+      await saveCycle(user.uid, cycleId, profile);
+    });
+
+    document.getElementById("btnReloadCycle").addEventListener("click", async () => {
+      const user = auth.currentUser; if (!user) return;
+      const profile = (await profileRef(user.uid).get()).data();
+
+      const { startDate, endDate } = computeCycle(profile.carDueDay);
+      const cycleId = cycleIdFromDates(startDate, endDate);
+      await loadCycle(user.uid, cycleId, profile);
+    });
+
+    // Main listener
+    auth.onAuthStateChanged(async (user) => {
+      authMsg.textContent = "";
+      setupMsg.textContent = "";
+      cycleMsg.textContent = "";
+      clearAlert();
+
+      if (!user){
+        userBar.textContent = "";
+        show(authView);
+        return;
+      }
+
+      userBar.textContent = `Logado: ${user.email}`;
+
+      const profile = await ensureProfile(user.uid);
+
+      if (!profile.setupDone){
+        financedValueEl.value = "";
+        insuranceValueEl.value = "";
+        carInstallmentValueEl.value = "";
+        carDueDayEl.value = "";
+        insuranceDueDayEl.value = "";
+        show(setupView);
+        return;
+      }
+
+      // Base outputs
+      financedOut.textContent = moneyBR(profile.financedValue);
+      insuranceOut.textContent = moneyBR(profile.insuranceValue);
+      carInstallmentOut.textContent = moneyBR(profile.carInstallmentValue);
+      carDueDayOut.textContent = String(profile.carDueDay ?? "—");
+      insuranceDueDayOut.textContent = String(profile.insuranceDueDay ?? "—");
+
+      // Payment alerts
+      const today = new Date().getDate();
+      const isCarDay = today === Number(profile.carDueDay);
+      const isInsuranceDay = today === Number(profile.insuranceDueDay);
+
+      if (isCarDay && isInsuranceDay){
+        setAlert("Hoje é dia de pagamentos", "Hoje vence o carro e o seguro.");
+      } else if (isCarDay){
+        setAlert("Hoje é dia de pagamento", "Hoje vence a parcela do carro (fechamento do relatório).");
+      } else if (isInsuranceDay){
+        setAlert("Hoje é dia de pagamento", "Hoje vence o seguro.");
+      }
+
+      // Cycle current
+      const { startDate, endDate } = computeCycle(Number(profile.carDueDay));
+      const cycleId = cycleIdFromDates(startDate, endDate);
+      cycleInfo.textContent = `Ciclo: ${fmtDate(startDate)} → ${fmtDate(endDate)} (ID: ${cycleId})`;
+
+      // Report pill
+      const available = reportAvailable(Number(profile.carDueDay));
+      reportPill.classList.remove("ok","warn","danger");
+      if (available){
+        reportPill.classList.add("ok");
+        reportPill.textContent = "Relatório liberado";
+      } else {
+        reportPill.classList.add("warn");
+        reportPill.textContent = `Relatório libera no dia ${profile.carDueDay}`;
+      }
+
+      show(appView);
+
+      attachRecalc(profile);
+      await loadCycle(user.uid, cycleId, profile);
+      recalcNet(profile);
+    });
+  </script>
 </body>
 </html>
